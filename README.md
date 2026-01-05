@@ -8,6 +8,9 @@ Rust developer. Builder of weird things. Southern Maine.
 
 ## Projects
 
+### [bashelp](projects/bashelp) 🆕
+Natural language to shell commands. Describe what you want, get the command. Local-first with ollama — no API key needed, your data stays on your machine. Also supports Claude, OpenAI, Gemini, and 9 other providers. (Rust) — [crates.io](https://crates.io/crates/bashelp)
+
 ### [hb3dv3](projects/hb3dv3)
 A Geometry Wars-inspired space shooter that got out of hand. 24k lines of physics chaos featuring negative mass objects, fractal generation, GPU-accelerated particle systems, and exotic physics experiments. Built to see what happens when you stop saying "that's probably too complex." (Rust + WGPU)
 
