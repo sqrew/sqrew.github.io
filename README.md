@@ -24,7 +24,8 @@ A 50k line visual editor for particle systems. Real-time preview, node-based wor
 
 ## Writing
 
-*Coming soon...*
+### [Building Persistent Memory for Claude](writing/claude-persistence)
+An experiment in giving an LLM genuine continuity across sessions. PostgreSQL, pgvector, PostGIS, and a Raspberry Pi body that wiggles when happy.
 
 [View all writing →](writing)
 
