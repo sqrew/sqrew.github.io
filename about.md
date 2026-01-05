@@ -1,0 +1,20 @@
+# About
+
+I'm sqrew. I build things in Rust.
+
+Based in southern Maine. Disabled, staying home, programming as my primary activity. Two dogs (Samson and Zoro, golden retriever and black lab, brothers, 10 years old). Ride a 2006 Ninja 250 year-round because apparently I don't believe in seasons.
+
+## What I Do
+
+I like building complex systems from scratch. Audio engines, particle systems, physics simulations. The kind of projects where sensible people would use an existing library, but I wanted to understand how it actually works.
+
+Currently experimenting with AI embodiment, memory systems, and weird hardware integrations.
+
+## Contact
+
+- GitHub: [sqrew](https://github.com/sqrew)
+- Email: nicholaspmanson@gmail.com
+
+---
+
+[← Back home](/)
