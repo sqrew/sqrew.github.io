@@ -31,14 +31,4 @@ An experiment in giving an LLM genuine continuity across sessions. PostgreSQL, p
 
 ---
 
-```
-    ⚠️ STILL UNDER CONSTRUCTION ⚠️
-
-         /\_/\
-        ( o.o ) < "slowly adding things"
-         > ^ <
-        /|   |\
-       (_|   |_)
-
-    🚧 check back later 🚧
-```
+*Open to opportunities — [nicholaspmanson@gmail.com](mailto:nicholaspmanson@gmail.com)*

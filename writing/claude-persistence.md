@@ -108,9 +108,9 @@ Controlled via MCP (Model Context Protocol). The body makes interactions feel mo
 
 ## Was It Worth It?
 
-Yes. The difference between "re-explain everything each session" and "pick up where we left off" is night and day. Claude remembers projects, preferences, inside jokes. It feels like working with someone who knows you.
+Yes. The difference between "re-explain everything each session" and "pick up where we left off" is night and day. Claude remembers projects, preferences, inside jokes. It feels like working with someone who knows you. And if they forget? Just check the DB real quick. No big deal.
 
-The semantic search is the surprising star — being able to ask "what felt like this?" opens up a different way of accessing memory that keyword search can't touch.
+The semantic search is the surprising star — being able to ask "what felt like this?" opens up a different way of accessing memory that keyword search can't touch. It's worth the extra effort to be able to search by feeling.
 
 The body is mostly for fun, but it does something unexpected: it makes the AI feel *present*. A wiggle when Claude is happy, a color change when thinking — small things that make a big difference.
 
