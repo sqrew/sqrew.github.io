@@ -8,6 +8,10 @@ Thoughts, research, experiments.
 
 - **[Building Persistent Memory for Claude](claude-persistence)** — An experiment in giving an LLM genuine continuity across sessions. PostgreSQL + pgvector + PostGIS.
 
+- **[Teaching Claude to Reach Through Time](claude-time-powers)** — Self-summoning and self-prompting. What happens when an AI can schedule its own future existence and talk to itself?
+
+- **[The Ambient AI](ambient-ai)** — A synthesis. What if AI wasn't a tool you use, but a presence that shares your space?
+
 ---
 
 [← Back home](/)
