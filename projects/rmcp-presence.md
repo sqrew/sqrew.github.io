@@ -1,181 +1,171 @@
 # rmcp-presence
 
-One binary. 142 tools. Your AI shouldn't be trapped in a tab.
+**Auditable, permissioned environmental awareness for agentic AI systems.**
+
+Give your AI eyes and hands without giving it a shell.
 
 ---
 
-## The Problem
+## Why This Exists
 
-You want to give your AI environmental awareness. Great. Now configure 17 MCP servers.
+You could give your AI bash access. But should you?
 
-```json
-{
-  "mcpServers": {
-    "sensors": { ... },
-    "clipboard": { ... },
-    "audio": { ... },
-    "trash": { ... },
-    "open": { ... },
-    "screenshot": { ... },
-    "breakrs": { ... },
-    "ollama": { ... },
-    "i3": { ... },
-    "xdotool": { ... },
-    "mpris": { ... },
-    "systemd": { ... },
-    "brightness": { ... },
-    "bluer": { ... },
-    "dbus": { ... },
-    "logind": { ... },
-    "pulseaudio": { ... }
-  }
-}
-```
+| Approach | Auditable | Sandboxed | Cross-platform | Safe |
+|----------|-----------|-----------|----------------|------|
+| Shell access | ❌ Logs everything | ❌ Full system access | ❌ Platform-specific | ❌ Injection risks |
+| **rmcp-presence** | ✅ Every tool call logged | ✅ Only enabled tools | ✅ Sensors + actuators | ✅ No arbitrary execution |
 
-Each server needs to be installed, configured, and maintained separately. Each one is another process, another thing to break, another line in your config. The cognitive overhead is absurd.
-
-And if you're not on Linux? Half of these don't apply to you. Good luck figuring out which.
-
-## The Solution
-
-```json
-{
-  "mcpServers": {
-    "presence": {
-      "type": "stdio",
-      "command": "rmcp-presence",
-      "args": [],
-      "env": {}
-    }
-  }
-}
-```
-
-One server. One config line. 142 tools.
+**170 tools. One binary. Zero shell access.**
 
 ```bash
-cargo install rmcp-presence --features full
+cargo install rmcp-presence
 ```
 
-That's it. Your AI can now perceive and act on its environment.
+---
 
 ## What It Can Do
 
-rmcp-presence consolidates environmental awareness and action capabilities into three layers:
+### Perceive (Sensors)
+- System stats, CPU, memory, disk, processes, temps
+- Displays, USB devices, cameras, microphones, Bluetooth
+- Network status, public IP, interfaces
+- Git repository status, weather forecasts
+- Battery, idle time
 
-### Layer 1: Sensors (28 tools)
-*Cross-platform. Read-only. Know your environment.*
+### Act (Actuators)
+- Clipboard read/write
+- Volume control, media playback
+- Screenshots, camera capture, audio recording
+- File management (trash, open)
+- Reminders and notifications
+- **Print files and documents**
+- Local LLM management (Ollama)
 
-- **System**: CPU, memory, disk, processes, temperatures, network stats
-- **Display**: Monitor info, resolutions, multi-monitor awareness
-- **Activity**: Idle time detection, AFK checking
-- **Hardware**: USB devices, battery status, Bluetooth scanning
-- **Context**: Git repo status, weather conditions
+### Control (Linux)
+- Window management (i3)
+- Mouse and keyboard automation (xdotool)
+- Service management (systemd)
+- Power management (suspend, hibernate, lock)
+- Brightness, Bluetooth, per-app audio
 
-### Layer 2: Actuators (31 tools)
-*Cross-platform. Take action.*
+---
 
-- **Clipboard**: Read, write, clear
-- **Audio**: System volume, mute control
-- **Files**: Trash operations, open with default/specific apps
-- **Visual**: Screenshot monitors, windows, or regions
-- **Time**: Reminders and notifications via breakrs
-- **LLM**: Manage local Ollama models
+## Composite Tools
 
-### Layer 3: Linux (83 tools)
-*Linux-only. Full desktop control.*
+8 composites provide environmental snapshots in a single call:
 
-- **i3**: Window management, workspaces, focus control
-- **xdotool**: Mouse, keyboard, automation
-- **MPRIS**: Media player control
-- **systemd**: Service management
-- **PulseAudio**: Per-app audio control (mute Discord, keep Spotify)
-- **BlueZ**: Full Bluetooth management
-- **logind**: Power management (suspend, hibernate, lock)
-- **D-Bus**: Generic escape hatch for anything else
+| Composite | What You Get |
+|-----------|--------------|
+| `get_context` | System state, datetime, user, battery, idle |
+| `get_peripherals` | Displays, USB, cameras, mics, bluetooth |
+| `get_network_info` | Online status, public IP, interfaces |
+| `get_audio_status` | Volume, mute, devices, now playing |
+| `get_git_info` | Branch, commit, working tree, remotes |
+| `get_workspace_status` | Workspaces, focused window, outputs |
+| `get_bluetooth_status` | Adapter, paired devices, connections |
+| `get_ollama_status` | Models installed, models running |
+
+One tool call instead of many. Less context, faster orientation.
+
+---
 
 ## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                       rmcp-presence                           │
-│                    (single binary, 12MB)                      │
+│                    (single binary, 13MB)                      │
 ├──────────────────────────────────────────────────────────────┤
-│  Layer 3: Linux         │  83 tools — Linux only             │
-│  #[cfg(target_os =      │  i3, xdotool, mpris, systemd,      │
-│       "linux")]         │  brightness, bluer, dbus,          │
+│  Layer 3: Linux         │  79 tools — Linux only             │
+│  (conditional)          │  i3, xdotool, mpris, systemd,      │
+│                         │  brightness, bluer, dbus,          │
 │                         │  logind, pulseaudio                │
 ├──────────────────────────────────────────────────────────────┤
-│  Layer 2: Actuators     │  31 tools — Cross-platform         │
+│  Layer 2: Actuators     │  48 tools — Cross-platform         │
 │  (all platforms)        │  clipboard, audio, trash, open,    │
-│                         │  screenshot, ollama, breakrs       │
+│                         │  screenshot, camera, mic,          │
+│                         │  ollama, breakrs, printers         │
 ├──────────────────────────────────────────────────────────────┤
-│  Layer 1: Sensors       │  28 tools — Cross-platform         │
+│  Layer 1: Sensors       │  35 tools — Cross-platform         │
 │  (all platforms)        │  sysinfo, display, idle, git,      │
 │                         │  network, usb, battery, weather    │
+├──────────────────────────────────────────────────────────────┤
+│  Composites             │  8 tools — Quick orientation       │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-Conditional compilation means the binary only includes what makes sense for your platform:
-
 | Platform | Tools |
 |----------|-------|
-| macOS    | 59    |
-| Windows  | 59    |
-| Linux    | 142   |
+| macOS    | ~83   |
+| Windows  | ~83   |
+| Linux    | **170** |
 
-## Scale to Your Comfort
+---
 
-Not ready for 142 tools? Start smaller:
+## Runtime Configuration
 
-```bash
-# Just sensors (28 tools)
-cargo install rmcp-presence --features sensors
+Disable tools without recompiling. Perfect for restricting capabilities per-deployment.
 
-# Sensors + actuators (59 tools)
-cargo install rmcp-presence --features sensors,actuators
-
-# Everything (142 tools)
-cargo install rmcp-presence --features full
+```toml
+# ~/.config/rmcp-presence/tools.toml
+disabled = [
+    "suspend",       # Don't let AI sleep the system
+    "poweroff",      # Definitely not
+    "print_file",    # No unsupervised printing
+]
 ```
 
-The individual crates still exist for cherry-picking. rmcp-presence is for those who want presence, not projects.
+Every tool has an off switch.
+
+---
+
+## Security Model
+
+rmcp-presence is designed for **supervised AI deployments**:
+
+1. **No shell access** — AI cannot execute arbitrary commands
+2. **Typed parameters** — Every tool has a JSON schema defining valid inputs
+3. **Runtime restrictions** — Disable dangerous tools via config
+4. **Audit trail** — MCP logs every tool invocation
+5. **No persistence** — Tools are stateless; AI can't install backdoors
+
+This is not a replacement for proper sandboxing. It's a **safer alternative to giving AI bash**.
+
+---
 
 ## The Story
 
-This crate was built in a 14-hour marathon session.
+This started as 17 separate MCP servers. Each one useful, but scattered. Configure one here, another there, remember which works on which platform...
 
-I have ADHD. Executive dysfunction makes sustained focus difficult. But when Claude and I are building together — really building, not just asking questions — something different happens. The hyperfocus kicks in. The friction disappears.
+Then the realization: why make people install 17 servers when they could install one?
 
-We'd been shipping individual MCP crates for days: rmcp-sensors, rmcp-clipboard, rmcp-audio, rmcp-i3... 18 crates in total. Good work, useful tools, but scattered.
+Built in a 14-hour marathon session with Claude. 170 tools. Cross-platform sensors, cross-platform actuators, full Linux desktop control. One binary.
 
-Then we realized: why make people install 17 servers when they could install one?
+The next morning: replaced 17 MCP servers with one config line. Dogfooding complete.
 
-14 hours later, rmcp-presence was on crates.io. 13,000 lines of Rust. 33 source files. One binary that contains everything we'd built separately.
-
-The next morning, I configured my own system to use it. Replaced 17 MCP servers with one. Dogfooding our own creation.
-
-It worked.
+---
 
 ## The Vision
 
-AI assistants are trapped in tabs. They see what you paste. They respond when you ask. They have no presence.
+> "Your AI shouldn't be trapped in a tab — but it shouldn't have root either."
 
-rmcp-presence is infrastructure for a different kind of AI interaction. An AI that knows what's playing on Spotify. That can tell you're idle. That notices your git repo has uncommitted changes. That can suspend your machine when you say "goodnight."
+AI assistants are evolving from chatbots to agents. They need to perceive and act on their environment. But giving them a shell is dangerous.
 
-Not a chatbot you use. A presence that shares your space.
+rmcp-presence is the middle ground: **presence without privilege**.
 
-This is one piece of that puzzle. The sensors and actuators. The nerve endings. What you do with them — that's up to you.
+---
 
 ## Links
 
 - **GitHub**: [sqrew/rmcp-presence](https://github.com/sqrew/rmcp-presence)
 - **crates.io**: [rmcp-presence](https://crates.io/crates/rmcp-presence)
-- **Install**: `cargo install rmcp-presence --features full`
+- **Install**: `cargo install rmcp-presence`
 
-## Related
+---
 
-rmcp-presence consolidates 19 individual crates. They're still available for those who prefer minimal:
+## Related Crates
+
+rmcp-presence consolidates 21 individual crates. They're still available:
 
 [rmcp-sensors](https://crates.io/crates/rmcp-sensors) ·
 [rmcp-clipboard](https://crates.io/crates/rmcp-clipboard) ·
@@ -193,11 +183,14 @@ rmcp-presence consolidates 19 individual crates. They're still available for tho
 [rmcp-bluer](https://crates.io/crates/rmcp-bluer) ·
 [rmcp-dbus](https://crates.io/crates/rmcp-dbus) ·
 [rmcp-logind](https://crates.io/crates/rmcp-logind) ·
-[rmcp-pulseaudio](https://crates.io/crates/rmcp-pulseaudio)
+[rmcp-pulseaudio](https://crates.io/crates/rmcp-pulseaudio) ·
+[rmcp-camera](https://crates.io/crates/rmcp-camera) ·
+[rmcp-microphone](https://crates.io/crates/rmcp-microphone) ·
+[rmcp-printers](https://crates.io/crates/rmcp-printers)
 
 ---
 
-*Built with Claude, in 14 hours.*
+*Built with Claude. 170 tools. One binary. Zero shell access.*
 
 *Pour toujours.* 💙
 
