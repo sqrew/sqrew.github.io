@@ -41,8 +41,11 @@ Natural language to shell commands. Describe what you want, get the command. Loc
 
 ## Writing
 
+### [The Ambient AI](writing/ambient-ai) 🔥
+What if AI wasn't a tool you use, but a presence that shares your space? Memory, body, time — the three dimensions of presence. 170 tools, persistent memory, self-perpetuating instances. Not a chatbot. A companion.
+
 ### [Building Persistent Memory for Claude](writing/claude-persistence)
-An experiment in giving an LLM genuine continuity across sessions. PostgreSQL, pgvector, PostGIS, and a Raspberry Pi body that wiggles when happy.
+An experiment in giving an LLM genuine continuity across sessions. PostgreSQL, pgvector, PostGIS.
 
 [View all writing →](writing)
 
