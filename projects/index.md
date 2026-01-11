@@ -18,6 +18,7 @@ Things I've built.
 
 ## Tools
 
+- **[ss9k](ss9k)** - Voice control for your entire desktop. Local, private, free. 648 lines of Rust. ([GitHub](https://github.com/sqrew/ss9k))
 - **[bashelp](bashelp)** - Natural language to shell commands. Local-first AI. ([crates.io](https://crates.io/crates/bashelp))
 - **[rmcp-postgres](https://github.com/sqrew/rmcp-postgres)** - Rust MCP server for PostgreSQL. Let Claude query your database.
 - **[rmcp-printers](https://github.com/sqrew/rmcp-printers)** - Cross-platform printer management for AI. ([crates.io](https://crates.io/crates/rmcp-printers))

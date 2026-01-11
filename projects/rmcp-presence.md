@@ -10,9 +10,9 @@ Give your AI eyes and hands without giving it a shell.
 
 You could give your AI bash access. But should you?
 
-| Approach | Auditable | Sandboxed | Cross-platform | Safe |
-|----------|-----------|-----------|----------------|------|
-| Shell access | ❌ Logs everything | ❌ Full system access | ❌ Platform-specific | ❌ Injection risks |
+| Approach          | Auditable                 | Sandboxed             | Cross-platform         | Safe                      |
+|-------------------|---------------------------|-----------------------|------------------------|---------------------------|
+| Shell access      | ❌ Logs everything        | ❌ Full system access | ❌ Platform-specific   | ❌ Injection risks        |
 | **rmcp-presence** | ✅ Every tool call logged | ✅ Only enabled tools | ✅ Sensors + actuators | ✅ No arbitrary execution |
 
 **170 tools. One binary. Zero shell access.**
@@ -94,10 +94,10 @@ One tool call instead of many. Less context, faster orientation.
 └──────────────────────────────────────────────────────────────┘
 ```
 
-| Platform | Tools |
-|----------|-------|
-| macOS    | ~83   |
-| Windows  | ~83   |
+| Platform | Tools   |
+|----------|---------|
+| macOS    | ~83     |
+| Windows  | ~83     |
 | Linux    | **170** |
 
 ---
