@@ -11,13 +11,8 @@ Rust developer. Builder of weird things. Southern Maine.
 ---
 
 ## Featured
-
-### [rmcp-presence](projects/rmcp-presence) 🔥
-**Auditable, permissioned environmental awareness for agentic AI systems.**
-
-Give your AI eyes and hands without giving it a shell. 170 tools, one binary, zero shell access. Sensors, actuators, and desktop control — cross-platform where possible, full Linux support.
-
-*The safer alternative to giving your AI bash.* ([crates.io](https://crates.io/crates/rmcp-presence) · [GitHub](https://github.com/sqrew/rmcp-presence))
+###[ss9k](projects/ss9k)
+SS9K is a local speech-to-text tool that types wherever your cursor is - no cloud, no subscriptions, just Whisper running on your GPU. It also does voice commands, allowing you to control your PC with your voice. Along with punctuation and spell mode it's both a dictation tool and a hands-free system controller. SS9K is heavily configurable and extensible. Originally created to help the disabled or injured with typing and general computer use, SS9K has become a powerful program offering benefits to all users.
 
 ---
 
@@ -34,6 +29,14 @@ A Geometry Wars-inspired space shooter that got out of hand. 24k lines of physic
 
 ### [bashelp](projects/bashelp)
 Natural language to shell commands. Describe what you want, get the command. Local-first with ollama — your data stays on your machine. ([crates.io](https://crates.io/crates/bashelp))
+
+
+### [rmcp-presence](projects/rmcp-presence)
+**Auditable, permissioned environmental awareness for agentic AI systems.**
+
+Give your AI eyes and hands without giving it a shell. 170 tools, one binary, zero shell access. Sensors, actuators, and desktop control — cross-platform where possible, full Linux support.
+
+*The safer alternative to giving your AI bash.* ([crates.io](https://crates.io/crates/rmcp-presence) · [GitHub](https://github.com/sqrew/rmcp-presence))
 
 [View all projects →](projects)
 
