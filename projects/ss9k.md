@@ -128,6 +128,8 @@ Say "command shift" + direction:
 | command release w  | Release W key             |
 | command release all| Release all held keys     |
 
+Hold mode rapidly presses keys together (rate configurable via `key_repeat_ms`).
+
 **Emoji**
 
 Say "command emoji" + name: smile, thumbs up, fire, heart, crab, poop, and 80+ more.
@@ -221,6 +223,7 @@ hotkey = "F12"            # any supported key
 hotkey_mode = "hold"      # hold or toggle
 toggle_timeout_secs = 0   # auto-stop in toggle mode (0 = disabled)
 leader = "command"        # leader word for commands
+key_repeat_ms = 50        # key repeat rate for hold mode
 quiet = false             # suppress verbose output
 
 [commands]
