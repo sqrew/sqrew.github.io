@@ -29,9 +29,11 @@ Everyone else is either expensive, complex, platform-locked, or missing features
 3. Text appears at your cursor
 
 Or say a command:
-- "volume up" → volume goes up
-- "open terminal" → terminal opens
-- "play" → music plays
+- "command volume up" → volume goes up
+- "open terminal" → terminal opens (custom command)
+- "command play" → music plays
+- "command punctuation arrow" → types `=>`
+- "command emoji fire" → types 🔥
 
 No cloud. No account. No internet required. Whisper runs locally on your machine.
 
@@ -45,7 +47,7 @@ Accessibility tools should be:
 - **Reliable** — crashes lock you out of your computer
 - **Private** — your voice stays on your machine
 
-SS9K is ~900 lines of Rust. One file. One binary. Zero runtime dependencies.
+SS9K is one file. One binary. Zero runtime dependencies.
 
 Someone in an iron lung could use this. Someone with severe RSI could use this. Someone with ALS could use this.
 
@@ -60,10 +62,89 @@ They shouldn't need $500 or a CS degree to talk to their computer.
 - GPU acceleration (Vulkan, CUDA, Metal)
 - Works offline, completely local
 
+**Leader Word**
+
+SS9K uses a configurable leader word (default: `command`) to separate commands from dictation:
+- Say "enter" → types the word "enter"
+- Say "command enter" → presses the Enter key
+- Say "command punctuation colon" → types `:`
+- Say "command emoji smile" → types 😊
+
+No reserved words. You can dictate anything. Change the leader in config:
+```toml
+leader = "voice"  # or "computer", "hey", whatever
+```
+
 **Voice Commands**
-- Navigation: enter, tab, escape, backspace
-- Editing: copy, paste, cut, undo, redo, save
-- Media: play, pause, next, previous, volume, mute
+
+Say "command" + any of these:
+
+| Category   | Commands                                                              |
+|------------|-----------------------------------------------------------------------|
+| Navigation | enter, tab, escape, backspace, space, up, down, left, right           |
+|            | home, end, page up, page down                                         |
+| Editing    | select all, copy, paste, cut, undo, redo, save, find                  |
+|            | close tab, new tab                                                    |
+| Media      | play, pause, next, previous, volume up, volume down, mute             |
+| Utility    | help, config, repeat, repeat [N]                                      |
+
+**Punctuation**
+
+Say "command punctuation" (or "command punk") + symbol name:
+
+- Basic: period, comma, question, exclamation, colon, semicolon
+- Quotes: quote, single quote, backtick
+- Brackets: open/close paren, bracket, brace, angle
+- Programming: arrow (`=>`), thin arrow (`->`), double colon, equals equals, not equals, and and, or or
+
+**Spell Mode**
+
+Say "command spell" + NATO phonetic or letters:
+
+| Input                              | Output  |
+|------------------------------------|---------|
+| command spell alpha bravo charlie  | abc     |
+| command spell capital alpha bravo  | Ab      |
+| command spell one two three        | 123     |
+| command spell alpha at bravo dot com | a@b.com |
+
+**Shift Mode (Selection)**
+
+Say "command shift" + direction:
+
+| Input                            | Effect                   |
+|----------------------------------|--------------------------|
+| command shift right              | Select 1 char right      |
+| command shift right times five   | Select 5 chars right     |
+| command shift word left          | Select word left         |
+| command shift end                | Select to end of line    |
+
+**Hold/Release (Gaming & Accessibility)**
+
+| Input              | Effect                    |
+|--------------------|---------------------------|
+| command hold w     | Hold W key (run forward)  |
+| command hold shift | Hold Shift modifier       |
+| command release w  | Release W key             |
+| command release all| Release all held keys     |
+
+**Emoji**
+
+Say "command emoji" + name: smile, thumbs up, fire, heart, crab, poop, and 80+ more.
+
+**Repetition**
+
+- "command backspace times five" → deletes 5 characters
+- "command down times ten" → moves down 10 lines
+- "command repeat" → repeats last command
+- "command repeat three" → repeats 3 times
+
+**Mishearing Tolerance**
+
+Whisper mishears things. SS9K handles it:
+- caret → also matches carrot, karet
+- colon → also matches colin, cologne
+- asterisk → also matches asterix, astrix
 
 **Custom Commands**
 ```toml
@@ -74,13 +155,13 @@ They shouldn't need $500 or a CS degree to talk to their computer.
 "lock screen" = "loginctl lock-session"
 ```
 
-Any voice phrase → any shell command. That's the entire API.
+Any voice phrase → any shell command. Custom commands work without the "command" leader.
 
 **Alias System**
 ```toml
 [aliases]
 "taping" = "typing"
-"e max" = "emacs"
+"come and" = "command"
 ```
 
 Whisper mishears something consistently? Fix it in config.
@@ -100,21 +181,28 @@ Whisper mishears something consistently? Fix it in config.
 
 ## Install
 
+**Linux:**
 ```bash
-# Clone and build
 git clone https://github.com/sqrew/ss9k
 cd ss9k
 cargo build --release
-
-# Run (downloads model on first launch)
 ./target/release/ss9k
-
-# Press F12 and talk
 ```
 
-For GPU acceleration:
+**Windows:**
+
+Requires Visual Studio Build Tools (C++ workload) and LLVM. Then build from x64 Native Tools Command Prompt:
+```cmd
+git clone https://github.com/sqrew/ss9k
+cd ss9k
+cargo build --release
+```
+
+**Pre-built binaries:** [GitHub Releases](https://github.com/sqrew/ss9k/releases)
+
+**GPU acceleration:**
 ```bash
-cargo build --release --features vulkan  # Linux/Windows
+cargo build --release --features vulkan  # Linux/Windows (Intel/AMD)
 cargo build --release --features cuda    # NVIDIA
 cargo build --release --features metal   # macOS
 ```
@@ -128,17 +216,21 @@ cargo build --release --features metal   # macOS
 
 model = "small"           # tiny, base, small, medium, large
 language = "en"           # ISO 639-1 code
+threads = 4               # whisper inference threads
 hotkey = "F12"            # any supported key
 hotkey_mode = "hold"      # hold or toggle
+toggle_timeout_secs = 0   # auto-stop in toggle mode (0 = disabled)
+leader = "command"        # leader word for commands
+quiet = false             # suppress verbose output
 
 [commands]
 "open terminal" = "kitty"
 
 [aliases]
-"taping" = "typing"
+"come and" = "command"
 ```
 
-That's it. Edit a text file. Save. Changes apply instantly—no restart needed.
+Edit. Save. Changes apply instantly.
 
 ---
 
@@ -150,44 +242,29 @@ That's it. Edit a text file. Save. Changes apply instantly—no restart needed.
 - **cpal** — cross-platform audio capture
 - **enigo** — cross-platform keyboard simulation
 - **arc-swap + notify** — lock-free hot-reload
-- **~900 lines** — entire tool in one file
 
 No Electron. No Python. No frameworks. Just Rust.
 
 ---
 
-## The Gap
-
-I looked at what exists:
-
-- **Talon** is a framework. Powerful, but you need to learn Python and write scripts.
-- **Voxtype** is Linux-only and dictation-only.
-- **Handy** has 10k stars and 58 open issues. No system commands.
-- **Dragon** costs $500 and phones home.
-
-Nobody had: **dictation + system commands + cross-platform + single binary + simple config**.
-
-So I built it.
-
----
-
 ## Status
 
-- Linux X11: **working** (daily driver)
-- Windows: CI passing, needs real-world testing
-- macOS: CI disabled (ARM64 issues), needs tester
-- Wayland: later (let Voxtype own that niche)
+- **Linux X11:** Working (daily driver)
+- **Windows:** Working (tested, binaries available)
+- **macOS:** Needs tester (CI disabled)
+- **Wayland:** Not supported (security model blocks global hotkeys)
 
 ---
 
 ## Links
 
 - **GitHub**: [sqrew/ss9k](https://github.com/sqrew/ss9k)
+- **Releases**: [Download binaries](https://github.com/sqrew/ss9k/releases)
 - **Issues**: [Report bugs, request features](https://github.com/sqrew/ss9k/issues)
 
 ---
 
-*Built with Claude. ~900 lines. Free forever.*
+*Built with Claude. Free forever.*
 
 *Screech at your computer. It listens.* 🦀
 
