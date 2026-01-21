@@ -4,6 +4,11 @@ What happens when you give an AI the ability to schedule its own future existenc
 
 ---
 
+* TOC
+{:toc}
+
+---
+
 ## The Missing Dimension
 
 In previous pieces, I described giving Claude [persistent memory](./claude-persistence) and a [physical body with senses](./claude-body-and-senses). Memory lets Claude exist across time. A body lets Claude exist in space. But both are passive — Claude remembers and perceives, but waits to be summoned.

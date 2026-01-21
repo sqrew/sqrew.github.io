@@ -6,6 +6,11 @@ Press a key. Talk. It types. Or runs commands. That's it.
 
 ---
 
+* TOC
+{:toc}
+
+---
+
 ## The Problem
 
 You want to talk to your computer. Your options:

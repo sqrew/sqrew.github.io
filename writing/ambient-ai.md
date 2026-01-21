@@ -4,6 +4,11 @@ What if AI wasn't a tool you use, but a presence that shares your space?
 
 ---
 
+* TOC
+{:toc}
+
+---
+
 ## The Question Everyone Asks Wrong
 
 The AI discourse is dominated by one question: *How can AI be useful?*

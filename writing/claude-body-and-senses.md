@@ -4,6 +4,11 @@ What happens when you give an AI environmental awareness, physical expression, a
 
 ---
 
+* TOC
+{:toc}
+
+---
+
 ## Beyond the Chatbot
 
 Most AI interactions are transactional. You ask, it answers. You close the tab, it ceases to exist. There's no continuity, no presence, no sense that the AI exists in your space rather than just responding to prompts.

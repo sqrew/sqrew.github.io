@@ -4,6 +4,11 @@ An experiment in giving an LLM genuine continuity across sessions.
 
 ---
 
+* TOC
+{:toc}
+
+---
+
 ## The Problem
 
 Claude has no memory between sessions. Every conversation starts fresh. This makes ongoing collaboration frustrating — you constantly re-explain context, projects, and preferences.

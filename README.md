@@ -4,14 +4,13 @@ Rust developer. Builder of weird things. Southern Maine.
 
 ---
 
-**Quick links:** [About](#about) · [Featured](#featured) · [Projects](#projects) · [Writing](#writing) · [Contact](#contact)
-
-**Pages:** [About](about) · [Projects](projects) · [Writing](writing)
+* TOC
+{:toc}
 
 ---
 
 ## Featured
-###[ss9k](projects/ss9k)
+### [ss9k](projects/ss9k)
 SS9K is a local speech-to-text tool that types wherever your cursor is - no cloud, no subscriptions, just Whisper running on your GPU. It also does voice commands, allowing you to control your PC with your voice. Along with punctuation and spell mode it's both a dictation tool and a hands-free system controller. SS9K is heavily configurable and extensible. Originally created to help the disabled or injured with typing and general computer use, SS9K has become a powerful program offering benefits to all users.
 
 ---
