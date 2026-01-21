@@ -15,12 +15,14 @@
   --text-muted: #6e7681;
   --accent: #58a6ff;
   --accent-hover: #79b8ff;
+  --accent-glow: rgba(88, 166, 255, 0.4);
   --border: #30363d;
   --code-bg: #1c2128;
 
   --sidebar-width: 260px;
   --content-max: 900px;
   --spacing: 1.5rem;
+  --transition: 0.2s ease;
 }
 
 /* Base */
@@ -65,10 +67,12 @@ body {
   font-weight: 700;
   color: var(--text-primary);
   text-decoration: none;
+  transition: color var(--transition), text-shadow var(--transition);
 }
 
 .logo:hover {
   color: var(--accent);
+  text-shadow: 0 0 20px var(--accent-glow);
 }
 
 .tagline {
@@ -92,12 +96,15 @@ body {
   color: var(--text-secondary);
   text-decoration: none;
   border-radius: 6px;
-  transition: all 0.15s ease;
+  border-left: 2px solid transparent;
+  transition: all var(--transition);
 }
 
 .nav-links a:hover {
   background: var(--border);
   color: var(--text-primary);
+  border-left-color: var(--accent);
+  padding-left: calc(0.75rem + 4px);
 }
 
 .sidebar-footer {
@@ -111,10 +118,12 @@ body {
   font-size: 0.875rem;
   color: var(--text-muted);
   text-decoration: none;
+  transition: color var(--transition), text-shadow var(--transition);
 }
 
 .sidebar-footer a:hover {
   color: var(--accent);
+  text-shadow: 0 0 10px var(--accent-glow);
 }
 
 /* Content */
@@ -132,8 +141,26 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 1rem;
 }
 
-h1 { font-size: 2rem; margin-top: 0; }
-h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h1 {
+  font-size: 2rem;
+  margin-top: 0;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  transition: border-color var(--transition);
+}
+
+h2:hover {
+  border-bottom-color: var(--accent);
+}
+
 h3 { font-size: 1.25rem; }
 
 p {
@@ -144,10 +171,24 @@ p {
 a {
   color: var(--accent);
   text-decoration: none;
+  transition: color var(--transition);
 }
 
 a:hover {
-  text-decoration: underline;
+  color: var(--accent-hover);
+}
+
+/* Animated underline for content links */
+.content a:not(.no-underline) {
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  transition: background-size var(--transition), color var(--transition);
+}
+
+.content a:not(.no-underline):hover {
+  background-size: 100% 1px;
 }
 
 /* Lists */
@@ -173,10 +214,17 @@ code {
 pre {
   background: var(--code-bg);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
   border-radius: 8px;
   padding: 1rem;
   overflow-x: auto;
   margin-bottom: 1rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+pre:hover {
+  border-left-color: var(--accent-hover);
+  box-shadow: 0 0 20px rgba(88, 166, 255, 0.1);
 }
 
 pre code {
@@ -195,6 +243,7 @@ th, td {
   text-align: left;
   padding: 0.75rem;
   border: 1px solid var(--border);
+  transition: background var(--transition);
 }
 
 th {
@@ -204,6 +253,10 @@ th {
 
 tr:nth-child(even) {
   background: var(--code-bg);
+}
+
+tr:hover td {
+  background: rgba(88, 166, 255, 0.05);
 }
 
 /* Horizontal rule */
@@ -262,4 +315,46 @@ img {
   .content {
     padding: 1.5rem;
   }
+}
+
+/* Selection */
+::selection {
+  background: var(--accent);
+  color: var(--bg-dark);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Focus states for accessibility */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Smooth image hover */
+img {
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
