@@ -18,7 +18,7 @@ SS9K is a local speech-to-text tool that types wherever your cursor is - no clou
 
 ## Projects
 
-### [tunes](projects/tunes) ⭐ 113 stars
+### [tunes](projects/tunes)
 A 65k line audio engine built from scratch. Top 0.1% of GitHub repos by stars. Because apparently buying a library is for people with self-control. (Rust)
 
 ### [RDPE](projects/rdpe)
@@ -26,10 +26,6 @@ A 50k line visual editor for particle systems. Real-time preview, node-based wor
 
 ### [hb3dv3](projects/hb3dv3)
 A Geometry Wars-inspired space shooter that got out of hand. 24k lines of physics chaos featuring negative mass objects and exotic physics experiments. (Rust + WGPU)
-
-### [bashelp](projects/bashelp)
-Natural language to shell commands. Describe what you want, get the command. Local-first with ollama — your data stays on your machine. ([crates.io](https://crates.io/crates/bashelp))
-
 
 ### [rmcp-presence](projects/rmcp-presence)
 **Auditable, permissioned environmental awareness for agentic AI systems.**
