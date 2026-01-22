@@ -30,6 +30,20 @@
 
     <main class="content">
       {{ content }}
+
+      <footer class="site-footer">
+        <div class="footer-content">
+          <p class="footer-tagline">Built with Rust, Claude, and too much coffee.</p>
+          <div class="footer-links">
+            <a href="https://github.com/{{ site.github_username }}">GitHub</a>
+            <span class="footer-separator">·</span>
+            <a href="https://crates.io/users/{{ site.github_username }}">crates.io</a>
+            <span class="footer-separator">·</span>
+            <a href="mailto:nicholaspmanson@gmail.com">Contact</a>
+          </div>
+          <p class="footer-crab">🦀</p>
+        </div>
+      </footer>
     </main>
   </div>
 </body>
