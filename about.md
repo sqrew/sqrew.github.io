@@ -8,7 +8,7 @@ title: About
 </div>
 
 <div class="about-intro">
-  <p class="lead">I'm sqrew. I build things in Rust — usually things that sensible people would just use a library for.</p>
+  <p class="lead">I'm sqrew. I like to build things in Rust — usually things that sensible people would just use a library for.</p>
 </div>
 
 ---
@@ -38,7 +38,7 @@ title: About
 
 ## The Person
 
-Based in southern Maine. Programming is my primary activity — it's what I do when I'm not walking the dogs or riding my motorcycle in weather that makes people question my judgment.
+Based in southern Maine. Programming is my primary activity — it's what I do when I'm not walking the dogs or riding my motorcycle in weather that makes people question my judgment. ~35, chronically bored, love to work 12+ hours a day on projects. Interested in cosmology, astrophysics, technology, philosophy, AI/ML. 
 
 **The dogs:** Samson (golden retriever) and Zoro (black lab). Brothers. 10 years old. Very good boys.
 
@@ -48,7 +48,7 @@ Based in southern Maine. Programming is my primary activity — it's what I do w
 
 ## The Work
 
-I like building complex systems from scratch. Audio engines, particle systems, physics simulations, voice control systems. The kind of projects where the sensible path is "use an existing library" but I wanted to understand how it *actually* works.
+I like building complex systems from scratch. Audio engines, particle systems, physics simulations, voice and system control systems. The kind of projects where the sensible path is "use an existing library" but I wanted to understand how it works the way it does at a base level.
 
 <div class="card-grid">
   <div class="project-card">
@@ -71,12 +71,13 @@ I like building complex systems from scratch. Audio engines, particle systems, p
 
 <div class="tech-tags">
   <span class="tech-tag">Rust</span>
-  <span class="tech-tag">WGPU</span>
-  <span class="tech-tag">PostgreSQL</span>
   <span class="tech-tag">Linux</span>
   <span class="tech-tag">Emacs</span>
+  <span class="tech-tag">Kitty</span>
   <span class="tech-tag">i3</span>
+  <span class="tech-tag">Vivaldi</span>
   <span class="tech-tag">Claude</span>
+  <span class="tech-tag">PostgreSQL</span>
 </div>
 
 ---
@@ -101,3 +102,12 @@ I like building complex systems from scratch. Audio engines, particle systems, p
 ---
 
 <a href="/" class="view-all">← Back home</a>
+
+
+
+
+
+
+
+
+

@@ -27,13 +27,13 @@ title: Projects
 <div class="card-grid">
   <div class="project-card">
     <h3><a href="tunes">tunes</a></h3>
-    <p class="card-tech">Rust · 65k lines · ⭐ 113</p>
+    <p class="card-tech">Rust · 65k lines · ⭐ 117</p>
     <p>Audio engine from scratch. Sample-accurate timing, real-time synthesis, effects processing. Top 0.1% GitHub stars.</p>
   </div>
 
   <div class="project-card">
     <h3><a href="rdpe">RDPE</a></h3>
-    <p class="card-tech">Rust · WGPU · Egui · 68k lines</p>
+    <p class="card-tech">Rust · WGPU · Egui · 50k lines</p>
     <p>Visual particle system editor. Real-time preview, GPU-accelerated rendering, export to game-ready formats.</p>
   </div>
 
