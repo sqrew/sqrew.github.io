@@ -143,11 +143,21 @@
       };
 
       document.getElementById('fullscreen-btn').onclick = function() {
-        canvasElement.requestFullscreen();
+        canvasElement.requestFullscreen().then(() => {
+          canvasElement.requestPointerLock();
+        }).catch(() => {
+          canvasElement.requestFullscreen();
+          canvasElement.requestPointerLock();
+        });
       };
 
       canvasElement.ondblclick = function() {
-        canvasElement.requestFullscreen();
+        canvasElement.requestFullscreen().then(() => {
+          canvasElement.requestPointerLock();
+        }).catch(() => {
+          canvasElement.requestFullscreen();
+          canvasElement.requestPointerLock();
+        });
       };
 
       document.getElementById('nii-file-input').onchange = function(e) {
