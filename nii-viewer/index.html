@@ -169,6 +169,17 @@
       </div>
     </div>
 
+    <div class="slider-container" style="margin-top: 10px;">
+      <div class="slider-group" style="width: 45%;">
+        <label for="min-thresh">Min Density Cutoff: <span id="val-min">22%</span></label>
+        <input type="range" id="min-thresh" min="0" max="100" value="22">
+      </div>
+      <div class="slider-group" style="width: 45%;">
+        <label for="max-thresh">Max Density Cutoff: <span id="val-max">100%</span></label>
+        <input type="range" id="max-thresh" min="0" max="100" value="100">
+      </div>
+    </div>
+
     <textarea id="output" rows="8" readonly></textarea>
 
     <script type='text/javascript'>
@@ -273,6 +284,28 @@
           document.getElementById('clip-z').value = percent;
           document.getElementById('val-z').innerText = percent + "%";
         }
+      };
+
+      document.getElementById('min-thresh').oninput = function() {
+        const val = this.value;
+        document.getElementById('val-min').innerText = val + "%";
+        if (Module._nii_set_min_threshold) {
+          Module._nii_set_min_threshold(val / 100.0);
+        }
+      };
+
+      document.getElementById('max-thresh').oninput = function() {
+        const val = this.value;
+        document.getElementById('val-max').innerText = val + "%";
+        if (Module._nii_set_max_threshold) {
+          Module._nii_set_max_threshold(val / 100.0);
+        }
+      };
+
+      window.updateMinThresholdSlider = function(value) {
+        const percent = Math.round(value * 100);
+        document.getElementById('min-thresh').value = percent;
+        document.getElementById('val-min').innerText = percent + "%";
       };
 
       var Module = {
