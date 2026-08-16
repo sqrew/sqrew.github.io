@@ -143,19 +143,11 @@
       };
 
       document.getElementById('fullscreen-btn').onclick = function() {
-        if (Module.requestFullscreen) {
-          Module.requestFullscreen(true, true);
-        } else {
-          canvasElement.requestFullscreen();
-        }
+        canvasElement.requestFullscreen();
       };
 
       canvasElement.ondblclick = function() {
-        if (Module.requestFullscreen) {
-          Module.requestFullscreen(true, true);
-        } else {
-          canvasElement.requestFullscreen();
-        }
+        canvasElement.requestFullscreen();
       };
 
       document.getElementById('nii-file-input').onchange = function(e) {
