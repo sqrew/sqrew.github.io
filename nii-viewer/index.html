@@ -78,6 +78,53 @@
         color: #22d3ee;
         border-color: #22d3ee;
       }
+      .slider-container {
+        display: flex;
+        justify-content: space-around;
+        width: 1280px;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid #1e293b;
+        border-radius: 12px;
+        padding: 15px;
+        margin-top: 15px;
+        box-sizing: border-box;
+        backdrop-filter: blur(8px);
+      }
+      .slider-group {
+        display: flex;
+        flex-direction: column;
+        width: 30%;
+      }
+      .slider-group label {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-bottom: 6px;
+        font-weight: bold;
+      }
+      .slider-group label span {
+        color: #06b6d4;
+      }
+      .slider-group input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        background: #1e293b;
+        height: 6px;
+        border-radius: 3px;
+        outline: none;
+      }
+      .slider-group input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #06b6d4;
+        cursor: pointer;
+        box-shadow: 0 0 8px rgba(6,182,212,0.8);
+        transition: transform 0.1s ease;
+      }
+      .slider-group input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+      }
       .spinner {
         height: 30px;
         width: 30px;
@@ -106,6 +153,22 @@
     <div class="emscripten_border">
       <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
     </div>
+
+    <div class="slider-container">
+      <div class="slider-group">
+        <label for="clip-x">Sagittal (X) Clip: <span id="val-x">100%</span></label>
+        <input type="range" id="clip-x" min="0" max="100" value="100">
+      </div>
+      <div class="slider-group">
+        <label for="clip-y">Coronal (Y) Clip: <span id="val-y">100%</span></label>
+        <input type="range" id="clip-y" min="0" max="100" value="100">
+      </div>
+      <div class="slider-group">
+        <label for="clip-z">Axial (Z) Clip: <span id="val-z">100%</span></label>
+        <input type="range" id="clip-z" min="0" max="100" value="100">
+      </div>
+    </div>
+
     <textarea id="output" rows="8" readonly></textarea>
 
     <script type='text/javascript'>
@@ -180,6 +243,21 @@
         };
         reader.readAsArrayBuffer(file);
       };
+
+      function updateClip(axis, val) {
+        const percent = val + "%";
+        if (axis === 0) document.getElementById('val-x').innerText = percent;
+        if (axis === 1) document.getElementById('val-y').innerText = percent;
+        if (axis === 2) document.getElementById('val-z').innerText = percent;
+
+        if (Module._nii_set_clipping) {
+          Module._nii_set_clipping(axis, val / 100.0);
+        }
+      }
+
+      document.getElementById('clip-x').oninput = function() { updateClip(0, this.value); };
+      document.getElementById('clip-y').oninput = function() { updateClip(1, this.value); };
+      document.getElementById('clip-z').oninput = function() { updateClip(2, this.value); };
 
       var Module = {
         print(...args) {

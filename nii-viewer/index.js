@@ -76,7 +76,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmpwmfhfh0i.js
+// include: /tmp/tmpnmv8ssye.js
 
   if (!Module['expectedDataFileDownloads']) Module['expectedDataFileDownloads'] = 0;
   Module['expectedDataFileDownloads']++;
@@ -203,21 +203,21 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
   })();
 
-// end include: /tmp/tmpwmfhfh0i.js
-// include: /tmp/tmprcor7lab.js
+// end include: /tmp/tmpnmv8ssye.js
+// include: /tmp/tmp5as4h4lx.js
 
     // All the pre-js content up to here must remain later on, we need to run
     // it.
     if ((typeof ENVIRONMENT_IS_WASM_WORKER != 'undefined' && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != 'undefined' && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != 'undefined' && ENVIRONMENT_IS_AUDIO_WORKLET)) Module['preRun'] = [];
     var necessaryPreJSTasks = Module['preRun'].slice();
-  // end include: /tmp/tmprcor7lab.js
-// include: /tmp/tmp703mlqlq.js
+  // end include: /tmp/tmp5as4h4lx.js
+// include: /tmp/tmpzzswospp.js
 
     if (!Module['preRun']) throw 'Module.preRun should exist because file support used it; did a pre-js delete it?';
     necessaryPreJSTasks.forEach((task) => {
       if (Module['preRun'].indexOf(task) < 0) throw 'All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?';
     });
-  // end include: /tmp/tmp703mlqlq.js
+  // end include: /tmp/tmpzzswospp.js
 
 
 var programArgs = [];
@@ -9105,13 +9105,14 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('wasmBinary');
 }
 var ASM_CONSTS = {
-  87012: () => { if (window.triggerNiftiFileSelect) { window.triggerNiftiFileSelect(); } }
+  87268: () => { if (window.triggerNiftiFileSelect) { window.triggerNiftiFileSelect(); } }
 };
 
 // Imports from the Wasm binary.
 var _malloc = Module['_malloc'] = makeInvalidEarlyAccess('_malloc');
 var _free = Module['_free'] = makeInvalidEarlyAccess('_free');
 var _nii_load_file_data = Module['_nii_load_file_data'] = makeInvalidEarlyAccess('_nii_load_file_data');
+var _nii_set_clipping = Module['_nii_set_clipping'] = makeInvalidEarlyAccess('_nii_set_clipping');
 var _fflush = makeInvalidEarlyAccess('_fflush');
 var _strerror = makeInvalidEarlyAccess('_strerror');
 var _main = Module['_main'] = makeInvalidEarlyAccess('_main');
@@ -9180,6 +9181,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['malloc'] != 'undefined', 'missing Wasm export: malloc');
   assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
   assert(typeof wasmExports['nii_load_file_data'] != 'undefined', 'missing Wasm export: nii_load_file_data');
+  assert(typeof wasmExports['nii_set_clipping'] != 'undefined', 'missing Wasm export: nii_set_clipping');
   assert(typeof wasmExports['fflush'] != 'undefined', 'missing Wasm export: fflush');
   assert(typeof wasmExports['strerror'] != 'undefined', 'missing Wasm export: strerror');
   assert(typeof wasmExports['__main_argc_argv'] != 'undefined', 'missing Wasm export: __main_argc_argv');
@@ -9245,6 +9247,7 @@ function assignWasmExports(wasmExports) {
   _malloc = Module['_malloc'] = createExportWrapper('malloc', wasmExports['malloc'], 1);
   _free = Module['_free'] = createExportWrapper('free', wasmExports['free'], 1);
   _nii_load_file_data = Module['_nii_load_file_data'] = createExportWrapper('nii_load_file_data', wasmExports['nii_load_file_data'], 2);
+  _nii_set_clipping = Module['_nii_set_clipping'] = createExportWrapper('nii_set_clipping', wasmExports['nii_set_clipping'], 2);
   _fflush = createExportWrapper('fflush', wasmExports['fflush'], 1);
   _strerror = createExportWrapper('strerror', wasmExports['strerror'], 1);
   _main = Module['_main'] = createExportWrapper('__main_argc_argv', wasmExports['__main_argc_argv'], 2);
