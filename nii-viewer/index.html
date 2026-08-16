@@ -259,6 +259,22 @@
       document.getElementById('clip-y').oninput = function() { updateClip(1, this.value); };
       document.getElementById('clip-z').oninput = function() { updateClip(2, this.value); };
 
+      window.updateClippingSlider = function(axis, value) {
+        const percent = Math.round(value * 100);
+        if (axis === 0) {
+          document.getElementById('clip-x').value = percent;
+          document.getElementById('val-x').innerText = percent + "%";
+        }
+        if (axis === 1) {
+          document.getElementById('clip-y').value = percent;
+          document.getElementById('val-y').innerText = percent + "%";
+        }
+        if (axis === 2) {
+          document.getElementById('clip-z').value = percent;
+          document.getElementById('val-z').innerText = percent + "%";
+        }
+      };
+
       var Module = {
         print(...args) {
           console.log(...args);
