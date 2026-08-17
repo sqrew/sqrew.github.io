@@ -22,6 +22,33 @@ title: Projects
 
 ---
 
+## Interactive Demos
+
+<div class="card-grid">
+  <div class="project-card highlight">
+    <h3><a href="../carp-wgpu-wasm-fractal-raymarcher/">Fractal Raymarcher</a></h3>
+    <p class="card-tech">Carp · WebGPU · WebAssembly</p>
+    <p>A real-time 3D fractal raymarcher compiled from Carp Lisp code directly to WebAssembly/WebGPU. Renders complex mathematical fields in the browser.</p>
+    <a href="../carp-wgpu-wasm-fractal-raymarcher/" class="card-link">Run Demo →</a>
+  </div>
+
+  <div class="project-card">
+    <h3><a href="../nii-viewer/">3D NIfTI MRI Viewer</a></h3>
+    <p class="card-tech">C++ · WebGL · WebAssembly</p>
+    <p>Interactive 3D medical imaging viewer. Load and slice MRI scan files (NIfTI format) directly in your browser using WebGL.</p>
+    <a href="../nii-viewer/" class="card-link">Run Demo →</a>
+  </div>
+
+  <div class="project-card">
+    <h3><a href="../carp-wgpu-wasm/">WebGPU Plasma Gradient</a></h3>
+    <p class="card-tech">Carp · WebGPU · WebAssembly</p>
+    <p>High-performance animated plasma shader rendering via WebGPU in the browser using compiled Lisp code.</p>
+    <a href="../carp-wgpu-wasm/" class="card-link">Run Demo →</a>
+  </div>
+</div>
+
+---
+
 ## Big Ones
 
 <div class="card-grid">
