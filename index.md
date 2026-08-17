@@ -110,3 +110,5 @@ title: Home
 ## Contact
 
 Open to opportunities — [nicholaspmanson@gmail.com](mailto:nicholaspmanson@gmail.com)
+
+
