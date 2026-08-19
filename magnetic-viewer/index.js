@@ -969,6 +969,59 @@ async function createWasm() {
     ;
   }
 
+  var readEmAsmArgsArray = [];
+  
+  
+  
+  
+  /** @type {!Float64Array} */
+  var HEAPF64;
+  
+  var readEmAsmArgs = (sigPtr, buf) => {
+      // Nobody should have mutated _readEmAsmArgsArray underneath us to be something else than an array.
+      assert(Array.isArray(readEmAsmArgsArray));
+      // The input buffer is allocated on the stack, so it must be stack-aligned.
+      assert(buf % 16 == 0);
+      readEmAsmArgsArray.length = 0;
+      var ch;
+      // Most arguments are i32s, so shift the buffer pointer so it is a plain
+      // index into HEAP32.
+      while (ch = HEAPU8[sigPtr++]) {
+        var chr = String.fromCharCode(ch);
+        var validChars = ['d', 'f', 'i', 'p'];
+        // In WASM_BIGINT mode we support passing i64 values as bigint.
+        validChars.push('j');
+        assert(validChars.includes(chr), `Invalid character ${ch}("${chr}") in readEmAsmArgs! Use only [${validChars}], and do not specify "v" for void return argument.`);
+        // Floats are always passed as doubles, so all types except for 'i'
+        // are 8 bytes and require alignment.
+        var wide = (ch != 105);
+        wide &= (ch != 112);
+        buf += wide && (buf % 8) ? 4 : 0;
+        readEmAsmArgsArray.push(
+          // Special case for pointers under wasm64 or CAN_ADDRESS_2GB mode.
+          ch == 112 ? HEAPU32[((buf)>>2)] :
+          ch == 106 ? HEAP64[((buf)>>3)] :
+          ch == 105 ?
+            HEAP32[((buf)>>2)] :
+            HEAPF64[((buf)>>3)]
+        );
+        buf += wide ? 8 : 4;
+      }
+      return readEmAsmArgsArray;
+    };
+  var runEmAsmFunction = (code, sigPtr, argbuf) => {
+      var args = readEmAsmArgs(sigPtr, argbuf);
+      assert(ASM_CONSTS.hasOwnProperty(code), `No EM_ASM constant found at address ${code}.  The loaded WebAssembly file is likely out of sync with the generated JavaScript.`);
+      return ASM_CONSTS[code](...args);
+    };
+  var _emscripten_asm_const_double = (code, sigPtr, argbuf) => {
+      return runEmAsmFunction(code, sigPtr, argbuf);
+    };
+
+  var _emscripten_asm_const_int = (code, sigPtr, argbuf) => {
+      return runEmAsmFunction(code, sigPtr, argbuf);
+    };
+
   var _emscripten_has_asyncify = () => 1;
 
   var abortOnCannotGrowMemory = (requestedSize) => {
@@ -1132,8 +1185,6 @@ async function createWasm() {
   /** @type {!Float32Array} */
   var HEAPF32;
   
-  /** @type {!Float64Array} */
-  var HEAPF64;
   var WebGPU = {
   Internals:{
   jsObjects:[],
@@ -7784,8 +7835,6 @@ var FS_stdin_getChar_buffer = [];
       }),
   };
 
-  var requestFullscreen = Browser.requestFullscreen;
-
       Module['requestAnimationFrame'] = MainLoop.requestAnimationFrame;
       Module['pauseMainLoop'] = MainLoop.pause;
       Module['resumeMainLoop'] = MainLoop.resume;
@@ -7843,7 +7892,6 @@ if (Module['printErr']) err = Module['printErr'];
 }
 
 // Begin runtime exports
-  Module['requestFullscreen'] = requestFullscreen;
   var missingLibrarySymbols = [
   'writeI53ToI64Clamped',
   'writeI53ToI64Signaling',
@@ -7864,7 +7912,7 @@ if (Module['printErr']) err = Module['printErr'];
   'inetNtop6',
   'readSockaddr',
   'writeSockaddr',
-  'readEmAsmArgs',
+  'runMainThreadEmAsm',
   'jstoi_q',
   'getExecutableName',
   'autoResumeAudioContext',
@@ -8035,6 +8083,8 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'timers',
   'warnOnce',
   'readEmAsmArgsArray',
+  'readEmAsmArgs',
+  'runEmAsmFunction',
   'dynCallLegacy',
   'dynCall',
   'handleException',
@@ -8087,6 +8137,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'uncaughtExceptionCount',
   'exceptionCaught',
   'Browser',
+  'requestFullscreen',
   'setCanvasSize',
   'getUserMedia',
   'createContext',
@@ -8290,6 +8341,20 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('wasmMemory');
   ignoredModuleProp('wasmBinary');
 }
+var ASM_CONSTS = {
+  85572: () => { return window.magneticViewerState.activeCount; },  
+ 85623: () => { if (window.magneticViewerState.resetRequested) { window.magneticViewerState.resetRequested = false; return 1; } return 0; },  
+ 85749: ($0, $1, $2, $3) => { window.magneticViewerState.poles[$0].x = $1; window.magneticViewerState.poles[$0].y = $2; window.magneticViewerState.poles[$0].z = $3; if (window.onMagneticViewerStateChanged) { window.onMagneticViewerStateChanged(); } },  
+ 85972: ($0, $1) => { window.magneticViewerState.poles[$0].charge = $1; if (window.onMagneticViewerStateChanged) { window.onMagneticViewerStateChanged(); } },  
+ 86110: ($0, $1) => { window.magneticViewerState.yaw = $0; window.magneticViewerState.pitch = $1; if (window.onMagneticViewerStateChanged) { window.onMagneticViewerStateChanged(); } },  
+ 86274: () => { if (window.magneticViewerState.randomizeRequested) { window.magneticViewerState.randomizeRequested = false; return 1; } return 0; },  
+ 86408: () => { return window.magneticViewerState.yaw; },  
+ 86451: () => { return window.magneticViewerState.pitch; },  
+ 86496: ($0) => { return window.magneticViewerState.poles[$0].x; },  
+ 86547: ($0) => { return window.magneticViewerState.poles[$0].y; },  
+ 86598: ($0) => { return window.magneticViewerState.poles[$0].z; },  
+ 86649: ($0) => { return window.magneticViewerState.poles[$0].charge; }
+};
 
 // Imports from the Wasm binary.
 var _malloc = makeInvalidEarlyAccess('_malloc');
@@ -8490,6 +8555,10 @@ var wasmImports = {
   _abort_js: __abort_js,
   /** @export */
   clock_time_get: _clock_time_get,
+  /** @export */
+  emscripten_asm_const_double: _emscripten_asm_const_double,
+  /** @export */
+  emscripten_asm_const_int: _emscripten_asm_const_int,
   /** @export */
   emscripten_has_asyncify: _emscripten_has_asyncify,
   /** @export */
