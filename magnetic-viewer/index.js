@@ -8342,18 +8342,18 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('wasmBinary');
 }
 var ASM_CONSTS = {
-  85572: () => { return window.magneticViewerState.activeCount; },  
- 85623: () => { if (window.magneticViewerState.resetRequested) { window.magneticViewerState.resetRequested = false; return 1; } return 0; },  
- 85749: ($0, $1, $2, $3) => { window.magneticViewerState.poles[$0].x = $1; window.magneticViewerState.poles[$0].y = $2; window.magneticViewerState.poles[$0].z = $3; if (window.onMagneticViewerStateChanged) { window.onMagneticViewerStateChanged(); } },  
- 85972: ($0, $1) => { window.magneticViewerState.poles[$0].charge = $1; if (window.onMagneticViewerStateChanged) { window.onMagneticViewerStateChanged(); } },  
- 86110: ($0, $1) => { window.magneticViewerState.yaw = $0; window.magneticViewerState.pitch = $1; if (window.onMagneticViewerStateChanged) { window.onMagneticViewerStateChanged(); } },  
- 86274: () => { if (window.magneticViewerState.randomizeRequested) { window.magneticViewerState.randomizeRequested = false; return 1; } return 0; },  
- 86408: () => { return window.magneticViewerState.yaw; },  
- 86451: () => { return window.magneticViewerState.pitch; },  
- 86496: ($0) => { return window.magneticViewerState.poles[$0].x; },  
- 86547: ($0) => { return window.magneticViewerState.poles[$0].y; },  
- 86598: ($0) => { return window.magneticViewerState.poles[$0].z; },  
- 86649: ($0) => { return window.magneticViewerState.poles[$0].charge; }
+  86596: () => { return window.magneticViewerState.activeCount; },  
+ 86647: () => { if (window.magneticViewerState.resetRequested) { window.magneticViewerState.resetRequested = false; return 1; } return 0; },  
+ 86773: ($0, $1, $2, $3) => { window.magneticViewerState.poles[$0].x = $1; window.magneticViewerState.poles[$0].y = $2; window.magneticViewerState.poles[$0].z = $3; if (window.onMagneticViewerStateChanged) { window.onMagneticViewerStateChanged(); } },  
+ 86996: ($0, $1) => { window.magneticViewerState.poles[$0].charge = $1; if (window.onMagneticViewerStateChanged) { window.onMagneticViewerStateChanged(); } },  
+ 87134: ($0, $1) => { window.magneticViewerState.yaw = $0; window.magneticViewerState.pitch = $1; if (window.onMagneticViewerStateChanged) { window.onMagneticViewerStateChanged(); } },  
+ 87298: () => { if (window.magneticViewerState.randomizeRequested) { window.magneticViewerState.randomizeRequested = false; return 1; } return 0; },  
+ 87432: () => { return window.magneticViewerState.yaw; },  
+ 87475: () => { return window.magneticViewerState.pitch; },  
+ 87520: ($0) => { return window.magneticViewerState.poles[$0].x; },  
+ 87571: ($0) => { return window.magneticViewerState.poles[$0].y; },  
+ 87622: ($0) => { return window.magneticViewerState.poles[$0].z; },  
+ 87673: ($0) => { return window.magneticViewerState.poles[$0].charge; }
 };
 
 // Imports from the Wasm binary.

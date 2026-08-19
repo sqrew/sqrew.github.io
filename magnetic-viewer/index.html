@@ -444,6 +444,7 @@
       // 3. Sync events from WASM
       window.onMagneticViewerStateChanged = function() {
         updateSlidersFromState();
+        updateUrlHash();
       };
 
       // 4. Input Handlers
@@ -461,6 +462,7 @@
             }
           }
         }
+        updateUrlHash();
       }
 
       function onPoleChargeChange(idx, val) {
@@ -472,16 +474,19 @@
         const isPos = floatVal >= 0;
         badge.className = `pole-badge ${isPos ? 'badge-positive' : 'badge-negative'}`;
         badge.innerText = isPos ? 'North (+)' : 'South (-)';
+        updateUrlHash();
       }
 
       function onPolePosChange(idx, axis, val) {
         const floatVal = parseFloat(val);
         window.magneticViewerState.poles[idx][axis] = floatVal;
         document.getElementById(`pole-${axis}-val-${idx}`).innerText = floatVal.toFixed(2);
+        updateUrlHash();
       }
 
       function triggerReset() {
         window.magneticViewerState.resetRequested = true;
+        history.replaceState(null, null, ' ');
       }
 
       function triggerRandomize() {
@@ -521,9 +526,63 @@
         window.magneticViewerState.yaw = 0.0;
         window.magneticViewerState.pitch = 0.2;
         updateSlidersFromState();
+        updateUrlHash();
+      }
+
+      // Hash Serialization Logic
+      function updateUrlHash() {
+        const state = window.magneticViewerState;
+        const parts = [];
+        parts.push(`c=${state.activeCount}`);
+        parts.push(`y=${state.yaw.toFixed(2)}`);
+        parts.push(`p=${state.pitch.toFixed(2)}`);
+        const poleStrings = [];
+        for (let i = 0; i < state.activeCount; i++) {
+          const p = state.poles[i];
+          poleStrings.push(`${p.x.toFixed(2)},${p.y.toFixed(2)},${p.z.toFixed(2)},${p.charge.toFixed(2)}`);
+        }
+        parts.push(`poles=${poleStrings.join(';')}`);
+        
+        const newHash = '#' + parts.join('&');
+        if (window.location.hash !== newHash) {
+          history.replaceState(null, null, newHash);
+        }
+      }
+
+      function loadStateFromUrl() {
+        const hash = window.location.hash;
+        if (!hash || hash.length < 2) return;
+        
+        const searchParams = new URLSearchParams(hash.substring(1));
+        
+        if (searchParams.has('c')) {
+          window.magneticViewerState.activeCount = parseInt(searchParams.get('c'));
+        }
+        if (searchParams.has('y')) {
+          window.magneticViewerState.yaw = parseFloat(searchParams.get('y'));
+        }
+        if (searchParams.has('p')) {
+          window.magneticViewerState.pitch = parseFloat(searchParams.get('p'));
+        }
+        if (searchParams.has('poles')) {
+          const poleStrings = searchParams.get('poles').split(';');
+          for (let i = 0; i < poleStrings.length; i++) {
+            if (i >= 8) break;
+            const parts = poleStrings[i].split(',');
+            if (parts.length === 4) {
+              window.magneticViewerState.poles[i] = {
+                x: parseFloat(parts[0]),
+                y: parseFloat(parts[1]),
+                z: parseFloat(parts[2]),
+                charge: parseFloat(parts[3])
+              };
+            }
+          }
+        }
       }
 
       // Initialize UI cards
+      loadStateFromUrl();
       renderPolesEditor();
       updateSlidersFromState();
 
