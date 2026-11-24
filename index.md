@@ -26,6 +26,13 @@ title: Home
 
 <div class="card-grid">
   <div class="project-card highlight">
+    <h3><a href="carp-voxel-engine/">Voxel Alchemy Engine</a></h3>
+    <p class="card-tech">Carp · WebGPU · WebAssembly</p>
+    <p>Real-time 3D GPU voxel sandbox and raymarcher compiled from Carp Lisp. Cellular fluids, colored GI, spectral terrain, modular spell wands, and black hole lensing.</p>
+    <a href="carp-voxel-engine/" class="card-link">Run Demo →</a>
+  </div>
+
+  <div class="project-card highlight">
     <h3><a href="carp-wgpu-wasm-fractal-raymarcher/">Fractal Raymarcher</a></h3>
     <p class="card-tech">Carp · WebGPU · WebAssembly</p>
     <p>A real-time 3D fractal raymarcher compiled from Carp Lisp code directly to WebAssembly/WebGPU. Renders complex mathematical fields in the browser.</p>
