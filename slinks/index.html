@@ -227,9 +227,9 @@
 
     <div style="font-size:9px;color:var(--muted);letter-spacing:0.06em;margin-bottom:4px;">BRAIN MODE [B]:</div>
     <div class="row">
-      <button class="btn" data-mppi="0" title="0 GPU Rollouts — 100% Pure 592-Weight 2-Layer Morphology-Conditioned Spinal MLP!">🧠 OFF (Spinal)</button>
-      <button class="btn active" data-mppi="1" title="MPPI wakes ONLY on cliff/surprise/juvenile, sleeps when cruising">⚡ Burst</button>
-      <button class="btn" data-mppi="2" title="Continuous 32-rollout MPPI + DAgger training every frame">🔥 Always</button>
+      <button class="btn" data-mppi="0" title="0 GPU Rollouts — 100% Pure 592-Weight Spinal Actor + 4-Niche Consolidated Reflexes!">🧠 OFF (Spinal)</button>
+      <button class="btn active" data-mppi="1" title="DIAL-MPC Spline-iCEM + TD-MPC2 Value Critic wakes on cliff/surprise, sleeps when cruising">⚡ Burst</button>
+      <button class="btn" data-mppi="2" title="Continuous 32-rollout DIAL-MPC Top-6 iCEM + TD(lambda) Value Critic + 4-Niche Replay">🔥 Always</button>
     </div>
 
     <div class="row">
@@ -296,7 +296,7 @@
       <div class="bar-bg"><div class="bar-fill" id="b-musc" style="background:#f43f5e;width:28%"></div></div>
     </div>
     <div class="bar-wrap">
-      <div class="bar-hdr"><span>MPPI Surprise / Pounce</span><span id="b-surp-txt">55% · 0%</span></div>
+      <div class="bar-hdr"><span>TD-Critic V · Niche Replay</span><span id="b-surp-txt">+0.0V · 0/4 · 55%</span></div>
       <div class="bar-bg"><div class="bar-fill" id="b-surp" style="background:#f59e0b;width:55%"></div></div>
     </div>
 
@@ -863,7 +863,8 @@
       jointsPack, uprightPct, headHeightM,
       tetherOn, bossDist, flankerAlive, tdLearns, scentConf, gaitSyncPct,
       totalNodes, organPack, specialPack, organEvt,
-      bossHp, colossusKills, isClimbing, ecoClimbers, ragState
+      bossHp, colossusKills, isClimbing, ecoClimbers, ragState,
+      criticVal, nichePack
     ) {
       document.getElementById('fps-lbl').textContent   = Math.round(fps) + ' FPS';
       const packExtra = shardCnt || 0;
@@ -1020,8 +1021,11 @@
       document.getElementById('b-bone').style.width     = Math.min(100, selBone) + '%';
       document.getElementById('b-musc-txt').textContent = Math.round(selMusc) + '%';
       document.getElementById('b-musc').style.width     = Math.min(100, selMusc) + '%';
-      document.getElementById('b-surp-txt').textContent = Math.round(surp) + '% surp · ' + Math.round(pounce) + '% pounce';
-      document.getElementById('b-surp').style.width     = Math.min(100, Math.max(surp, pounce)) + '%';
+      const cv       = (typeof criticVal === 'number' && isFinite(criticVal)) ? criticVal : 0.0;
+      const cvStr    = (cv >= 0 ? '+' : '') + cv.toFixed(1) + 'V';
+      const selMem   = (typeof nichePack === 'number') ? (nichePack % 10) : 0;
+      document.getElementById('b-surp-txt').textContent = cvStr + ' · ' + selMem + '/4 mem · ' + Math.round(surp) + '% surp';
+      document.getElementById('b-surp').style.width     = Math.min(100, Math.max(8, selMem * 22 + Math.max(surp, pounce) * 0.35)) + '%';
 
       if (isDoom) {
         liveBossDist = (typeof bossDist === 'number') ? bossDist : 15.0;
