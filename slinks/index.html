@@ -77,7 +77,7 @@
     .bar-wrap { margin-bottom: 6px; }
     .bar-hdr { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 2px; color: var(--muted); }
     .bar-bg { height: 6px; background: rgba(30, 41, 59, 0.9); border-radius: 3px; overflow: hidden; }
-    .bar-fill { height: 100%; width: 50%; border-radius: 3px; transition: width 0.12s linear; }
+    .bar-fill { height: 100%; width: 100% !important; border-radius: 3px; transform-origin: left center; transform: scaleX(0.5); will-change: transform; transition: transform 0.10s linear; }
     .limb-grid {
       display: grid; grid-template-columns: 1fr 48px 1fr; gap: 5px;
       align-items: center; margin: 8px 0; padding: 8px;
@@ -855,6 +855,60 @@
       return dietTag + '🦿 1-Leg Hopper';
     }
 
+    const _domCache = Object.create(null);
+    function getEl(id) {
+      return _domCache[id] || (_domCache[id] = document.getElementById(id));
+    }
+    function setTxt(id, val) {
+      const el = getEl(id);
+      if (el && el._prevTxt !== val) {
+        el._prevTxt = val;
+        el.textContent = val;
+      }
+    }
+    function setBar(id, pct, bg) {
+      const el = getEl(id);
+      if (!el) return;
+      const cl = Math.max(0, Math.min(100, pct));
+      if (el._prevPct === undefined || Math.abs(el._prevPct - cl) > 0.20) {
+        el._prevPct = cl;
+        el.style.transform = 'scaleX(' + (cl * 0.01).toFixed(3) + ')';
+      }
+      if (bg && el._prevBg !== bg) {
+        el._prevBg = bg;
+        el.style.background = bg;
+      }
+    }
+    function setCls(id, cls, on) {
+      const el = getEl(id);
+      const b = !!on;
+      const k = '_c_' + cls;
+      if (el && el[k] !== b) {
+        el[k] = b;
+        el.classList.toggle(cls, b);
+      }
+    }
+    const _limbBtns = Array.from(document.querySelectorAll('[data-limb]')).map(btn => ({
+      el: btn, bit: 1 << parseInt(btn.dataset.limb, 10), prevCut: null
+    }));
+
+    window.sl_on_stats_raw = function(statsPtr, fPtr, iPtr) {
+      if (!window.Module || !Module.HEAPU32) return;
+      const U = Module.HEAPU32, F = Module.HEAPF32, I = Module.HEAP32;
+      const s = statsPtr >>> 2, f = fPtr >>> 2, ii = iPtr >>> 2;
+      window.sl_on_stats(
+        U[s + 0], U[s + 1], U[s + 2] * 0.001, U[s + 3] * 0.1, U[s + 4] * 0.1, F[f + 0],
+        I[ii + 0], U[s + 17], U[s + 18] * 0.1, U[s + 19] * 0.1, U[s + 20] * 0.1, U[s + 21] * 0.1, U[s + 22] * 0.001, U[s + 23], U[s + 24], U[s + 25] * 0.1, U[s + 26] * 0.1,
+        U[s + 5], U[s + 30], U[s + 31], U[s + 32], U[s + 33],
+        I[ii + 1], F[f + 1], F[f + 2], U[s + 12], U[s + 13], F[f + 3],
+        U[s + 34], U[s + 35], U[s + 36] * 0.01,
+        I[ii + 2], F[f + 4], U[s + 40], U[s + 42], U[s + 43], U[s + 44],
+        U[s + 53], U[s + 54], U[s + 55], U[s + 57],
+        F[f + 5], I[ii + 3], I[ii + 4], U[s + 73], U[s + 74],
+        (U[s + 75] - 10000.0) * 0.001, U[s + 76]
+      );
+    };
+
     window.sl_on_stats = function(
       maxGen, births, meanSpd, meanBone, meanMusc, fps,
       selId, mask, nrg, grow, selBone, selMusc, selSpd, selGen, selEaten, surp, pounce,
@@ -866,7 +920,7 @@
       bossHp, colossusKills, isClimbing, ecoClimbers, ragState,
       criticVal, nichePack
     ) {
-      document.getElementById('fps-lbl').textContent   = Math.round(fps) + ' FPS';
+      setTxt('fps-lbl', Math.round(fps) + ' FPS');
       const packExtra = shardCnt || 0;
       const pureShards = Math.max(0, packExtra - (flankerAlive ? 1 : 0));
       const ecoRiders = ecoClimbers || 0;
@@ -875,35 +929,36 @@
       const isCorpse   = (rs % 400) >= 200;
       const isRagLock  = rs >= 400;
       const isLimpNow  = isCorpse || isRagLock || (ragTonePct < 35);
-      document.getElementById('st-gen').textContent    = isDoom
+      setTxt('st-gen', isDoom
         ? ('Tier ' + selGen + ((colossusKills > 0) ? (' · 🏆' + colossusKills) : (' · ' + packExtra + ' Spawn')))
-        : ('Gen ' + maxGen + ' · ' + births + (ecoRiders > 0 ? (' · 🧗' + ecoRiders) : ''));
+        : ('Gen ' + maxGen + ' · ' + births + (ecoRiders > 0 ? (' · 🧗' + ecoRiders) : '')));
       const totSlots = isDoom ? (1 + packExtra) : 16;
-      document.getElementById('st-mppi').textContent   = (mppiMode === 0) ? ('OFF (0/' + totSlots + ')') : (mppiCnt + ' / 16');
-      document.getElementById('st-mppi').style.color   = (mppiCnt > 0 && mppiMode > 0) ? '#f59e0b' : '#2dd4bf';
-      document.getElementById('st-spd').textContent    = meanSpd.toFixed(2) + ' m/s';
-      document.getElementById('st-tissue').textContent = Math.round(meanBone) + '% / ' + Math.round(meanMusc) + '%';
+      setTxt('st-mppi', (mppiMode === 0) ? ('OFF (0/' + totSlots + ')') : (mppiCnt + ' / 16'));
+      const mppiEl = getEl('st-mppi');
+      const mppiCol = (mppiCnt > 0 && mppiMode > 0) ? '#f59e0b' : '#2dd4bf';
+      if (mppiEl && mppiEl._prevCol !== mppiCol) { mppiEl._prevCol = mppiCol; mppiEl.style.color = mppiCol; }
+      setTxt('st-spd', meanSpd.toFixed(2) + ' m/s');
+      setTxt('st-tissue', Math.round(meanBone) + '% / ' + Math.round(meanMusc) + '%');
 
       const brainTag = isCorpse
         ? '💀 CORPSE'
         : (isLimpNow ? ('💫 LIMP ' + ragTonePct + '%') : ((selMppiOn && mppiMode > 0) ? '⚡ MPPI' : '🧠 SPINAL'));
-      document.getElementById('sel-title').textContent   = isDoom ? ('☠️ AMALGAM · ' + brainTag) : ('SLINK #' + selId + ' · ' + brainTag);
+      setTxt('sel-title', isDoom ? ('☠️ AMALGAM · ' + brainTag) : ('SLINK #' + selId + ' · ' + brainTag));
       const genTag = isDoom ? ('Tier ' + selGen) : ('Gen ' + selGen);
-      document.getElementById('sel-gen-spd').textContent = genTag + ' · ' + selSpd.toFixed(1) + ' m/s';
+      setTxt('sel-gen-spd', genTag + ' · ' + selSpd.toFixed(1) + ' m/s');
       const scaleMul = Math.max(0.1, (grow || 100) / 100.0);
-      document.getElementById('sel-arch').textContent    = classifyMorph(mask, spineCnt || 5, isCarn, hfPct || 100, uprightPct || 0, totalNodes, organPack, specialPack, headHeightM, scaleMul);
-      document.getElementById('btn-carn').classList.toggle('active', !!isCarn);
-      document.getElementById('btn-stand').classList.toggle('active', (uprightPct || 0) >= 55 && (mask & 48) !== 0);
-      document.getElementById('btn-worm').classList.toggle('active', (mask & 63) === 0);
-      document.getElementById('btn-ragdoll').classList.toggle('active', isRagLock || (!isCorpse && ragTonePct < 35));
+      setTxt('sel-arch', classifyMorph(mask, spineCnt || 5, isCarn, hfPct || 100, uprightPct || 0, totalNodes, organPack, specialPack, headHeightM, scaleMul));
+      setCls('btn-carn', 'active', !!isCarn);
+      setCls('btn-stand', 'active', (uprightPct || 0) >= 55 && (mask & 48) !== 0);
+      setCls('btn-worm', 'active', (mask & 63) === 0);
+      setCls('btn-ragdoll', 'active', isRagLock || (!isCorpse && ragTonePct < 35));
 
       const jp = jointsPack || 222;
       const jf = Math.floor(jp / 100) % 10;
       const jm = Math.floor(jp / 10) % 10;
       const jh = jp % 10;
       if ((mask & 63) === 0) {
-        document.getElementById('sel-skel').textContent =
-          'Spine ' + (spineCnt || 18) + ' Segs · Ventral Scales · Head ' + (headHeightM || 0.2).toFixed(2) + 'm';
+        setTxt('sel-skel', 'Spine ' + (spineCnt || 18) + ' Segs · Ventral Scales · Head ' + (headHeightM || 0.2).toFixed(2) + 'm');
       } else {
         let limbN = 0;
         for (let i = 0; i < 6; i++) if (mask & (1 << i)) limbN++;
@@ -916,8 +971,7 @@
         const stLbl = ((uprightPct || 0) >= 55 && (mask & 48) !== 0)
           ? ('Upright ' + uprightPct + '%')
           : ((limbN >= 2) ? 'Cling' : 'Sprawl');
-        document.getElementById('sel-skel').textContent =
-          'Spine ' + (spineCnt || 5) + ' · ' + jf + '-' + jm + '-' + jh + 'j · ' + gaitLbl + ' · ' + (headHeightM || 0.5).toFixed(2) + 'm (' + stLbl + ')';
+        setTxt('sel-skel', 'Spine ' + (spineCnt || 5) + ' · ' + jf + '-' + jm + '-' + jh + 'j · ' + gaitLbl + ' · ' + (headHeightM || 0.5).toFixed(2) + 'm (' + stLbl + ')');
       }
 
       const op  = organPack || 0;
@@ -932,7 +986,7 @@
       const cShld  = Math.floor(sp / 100) % 10;
       const cGlnd  = Math.floor(sp / 10) % 10;
       const cEarV  = sp % 10;
-      document.getElementById('btn-horns').classList.toggle('active', cAntlr > 0);
+      setCls('btn-horns', 'active', cAntlr > 0);
       const orgTags = ['🧬 ' + (totalNodes || 24) + '/96n'];
       if (cAntlr > 0) orgTags.push('🦌' + cAntlr);
       if (cEctSp > 0) orgTags.push('🦴+' + cEctSp + 'sp');
@@ -944,7 +998,7 @@
       orgTags.push(cEye > 0 ? ('👁' + cEye) : '🕶0');
       if (cSnoot > 0) orgTags.push('🐽' + cSnoot);
       if (cEarV > 0)  orgTags.push('👂' + cEarV);
-      document.getElementById('sel-organs').textContent = orgTags.join(' · ');
+      setTxt('sel-organs', orgTags.join(' · '));
 
       if (organEvt === 1) {
         sfxBoneMorph();
@@ -1009,23 +1063,21 @@
 
       const bHp = (typeof bossHp === 'number') ? Math.max(0, Math.min(100, bossHp)) : 100;
       const maxAtpEst = 135.0 * Math.min(2.6, Math.max(0.78, Math.pow(scaleMul, 0.65)));
-      document.getElementById('b-nrg-txt').textContent  = isDoom ? ('🧠 ' + Math.round(bHp) + '% BRAIN') : (Math.round(nrg) + ' ATP · ' + selEaten + ' pods');
-      document.getElementById('b-nrg').style.width      = isDoom ? (bHp + '%') : (Math.min(100, Math.max(2, (nrg / maxAtpEst) * 100)) + '%');
+      setTxt('b-nrg-txt', isDoom ? ('🧠 ' + Math.round(bHp) + '% BRAIN') : (Math.round(nrg) + ' ATP · ' + selEaten + ' pods'));
+      setBar('b-nrg', isDoom ? bHp : Math.min(100, Math.max(2, (nrg / maxAtpEst) * 100)), null);
       const hDisp = (headHeightM || 0.8);
-      document.getElementById('b-grow-txt').textContent = scaleMul.toFixed(2) + '× · ' + hDisp.toFixed(2) + 'm';
+      setTxt('b-grow-txt', scaleMul.toFixed(2) + '× · ' + hDisp.toFixed(2) + 'm');
       const logBar = Math.min(100, Math.max(4, ((Math.log(Math.max(scaleMul, 0.24)) - Math.log(0.24)) / (Math.log(5.4) - Math.log(0.24))) * 100));
-      const growEl = document.getElementById('b-grow');
-      growEl.style.width      = logBar + '%';
-      growEl.style.background = (hDisp >= 6.8 || scaleMul >= 3.4) ? '#f59e0b' : ((scaleMul <= 0.54) ? '#a78bfa' : '#38bdf8');
-      document.getElementById('b-bone-txt').textContent = Math.round(selBone) + '%';
-      document.getElementById('b-bone').style.width     = Math.min(100, selBone) + '%';
-      document.getElementById('b-musc-txt').textContent = Math.round(selMusc) + '%';
-      document.getElementById('b-musc').style.width     = Math.min(100, selMusc) + '%';
+      setBar('b-grow', logBar, (hDisp >= 6.8 || scaleMul >= 3.4) ? '#f59e0b' : ((scaleMul <= 0.54) ? '#a78bfa' : '#38bdf8'));
+      setTxt('b-bone-txt', Math.round(selBone) + '%');
+      setBar('b-bone', selBone, null);
+      setTxt('b-musc-txt', Math.round(selMusc) + '%');
+      setBar('b-musc', selMusc, null);
       const cv       = (typeof criticVal === 'number' && isFinite(criticVal)) ? criticVal : 0.0;
       const cvStr    = (cv >= 0 ? '+' : '') + cv.toFixed(1) + 'V';
       const selMem   = (typeof nichePack === 'number') ? (nichePack % 10) : 0;
-      document.getElementById('b-surp-txt').textContent = cvStr + ' · ' + selMem + '/4 mem · ' + Math.round(surp) + '% surp';
-      document.getElementById('b-surp').style.width     = Math.min(100, Math.max(8, selMem * 22 + Math.max(surp, pounce) * 0.35)) + '%';
+      setTxt('b-surp-txt', cvStr + ' · ' + selMem + '/4 mem · ' + Math.round(surp) + '% surp');
+      setBar('b-surp', Math.max(8, selMem * 22 + Math.max(surp, pounce) * 0.35), null);
 
       if (isDoom) {
         liveBossDist = (typeof bossDist === 'number') ? bossDist : 15.0;
@@ -1044,44 +1096,44 @@
         prevFlanker   = flankerAlive ? 1 : 0;
         prevHurt      = hurtFlash || 0;
 
-        const scPct = Math.min(100, Math.max(0, scentConf || 0));
         const lrnCnt = tdLearns || 0;
         const isColNow = (headHeightM || 0) >= 5.0 || scaleMul >= 2.0;
-        document.getElementById('btn-mode-col').classList.toggle('active', isColNow);
-        document.getElementById('btn-mode-doom').classList.toggle('active', !isColNow);
+        setCls('btn-mode-col', 'active', isColNow);
+        setCls('btn-mode-doom', 'active', !isColNow);
         const killsTag = (colossusKills > 0) ? (' · 🏆 ' + colossusKills + ' Slain') : '';
-        document.getElementById('dm-title').textContent =
-          (isColNow ? '🏔️ COLOSSUS · T' : '☠️ AMALGAM · T') + selGen + ' · ' + (headHeightM || 2.1).toFixed(1) + 'm' + killsTag + (lrnCnt > 0 ? (' · 🧠 ' + lrnCnt) : '');
-        document.getElementById('dm-boss-lbl').textContent = isColNow ? '🧠 Exposed Cranial Brain-Core (Climb Skull to Smash!)' : '🧠 Amalgam Core Integrity';
-        document.getElementById('dm-boss-txt').textContent = Math.round(bHp) + '%' + killsTag;
-        document.getElementById('dm-boss-hp').style.width  = bHp + '%';
-        document.getElementById('dm-boss-hp').style.background = (bHp < 38) ? '#f43f5e' : 'linear-gradient(90deg,#f59e0b,#22d3ee)';
-        document.getElementById('dm-alch-lbl').textContent = isClimbing ? '🧗 CLIMBING COLOSSUS!' : '⚗️ Alchemist HP';
+        setTxt('dm-title', (isColNow ? '🏔️ COLOSSUS · T' : '☠️ AMALGAM · T') + selGen + ' · ' + (headHeightM || 2.1).toFixed(1) + 'm' + killsTag + (lrnCnt > 0 ? (' · 🧠 ' + lrnCnt) : ''));
+        setTxt('dm-boss-lbl', isColNow ? '🧠 Exposed Cranial Brain-Core (Climb Skull to Smash!)' : '🧠 Amalgam Core Integrity');
+        setTxt('dm-boss-txt', Math.round(bHp) + '%' + killsTag);
+        setBar('dm-boss-hp', bHp, (bHp < 38) ? '#f43f5e' : 'linear-gradient(90deg,#f59e0b,#22d3ee)');
+        setTxt('dm-alch-lbl', isClimbing ? '🧗 CLIMBING COLOSSUS!' : '⚗️ Alchemist HP');
         if (flankerAlive) {
-          document.getElementById('dm-shards').textContent = '🦎 1 RAPTOR FLANKER' + (pureShards > 0 ? (' + ' + pureShards + ' Shard' + (pureShards > 1 ? 's' : '')) : ' HUNTING!');
+          setTxt('dm-shards', '🦎 1 RAPTOR FLANKER' + (pureShards > 0 ? (' + ' + pureShards + ' Shard' + (pureShards > 1 ? 's' : '')) : ' HUNTING!'));
         } else {
-          document.getElementById('dm-shards').textContent = (pureShards > 0) ? ('🩸 ' + pureShards + ' Severed Shard' + (pureShards > 1 ? 's' : '') + ' Hunting!') : '0 Shards Loose';
+          setTxt('dm-shards', (pureShards > 0) ? ('🩸 ' + pureShards + ' Severed Shard' + (pureShards > 1 ? 's' : '') + ' Hunting!') : '0 Shards Loose');
         }
-        const adEl = document.getElementById('dm-adapt');
-        adEl.classList.toggle('snared', !!tetherOn);
-        adEl.textContent = tetherOn
+        setCls('dm-adapt', 'snared', !!tetherOn);
+        setTxt('dm-adapt', tetherOn
           ? '🪝 FLESH-HARPOON SNARED! REELING YOU IN — PRESS [RMB / E] TO SEVER TENDRIL!'
-          : (ADAPT_LABELS[adaptCode || 0] || ADAPT_LABELS[0]);
+          : (ADAPT_LABELS[adaptCode || 0] || ADAPT_LABELS[0]));
         const hp = Math.max(0, Math.min(100, playerHp || 100));
-        document.getElementById('dm-hp-txt').textContent = Math.round(hp) + '%';
-        document.getElementById('dm-hp').style.width     = hp + '%';
-        document.getElementById('dm-hp').style.background = (hp < 35) ? '#f43f5e' : '#22d3ee';
+        setTxt('dm-hp-txt', Math.round(hp) + '%');
+        setBar('dm-hp', hp, (hp < 35) ? '#f43f5e' : '#22d3ee');
         const wPct = Math.max(0, Math.min(100, (1.0 - (wandCd || 0) / 0.85) * 100));
-        document.getElementById('dm-wand-txt').textContent = (wandCd > 0.02) ? (wandCd.toFixed(1) + 's') : 'READY';
-        document.getElementById('dm-wand').style.width     = wPct + '%';
-        document.getElementById('hurt-vignette').style.opacity = Math.min(0.92, hurtFlash || 0).toFixed(2);
+        setTxt('dm-wand-txt', (wandCd > 0.02) ? (wandCd.toFixed(1) + 's') : 'READY');
+        setBar('dm-wand', wPct, null);
+        const hvEl = getEl('hurt-vignette');
+        const hvOp = Math.min(0.92, hurtFlash || 0).toFixed(2);
+        if (hvEl && hvEl._prevOp !== hvOp) { hvEl._prevOp = hvOp; hvEl.style.opacity = hvOp; }
       }
 
-      document.querySelectorAll('[data-limb]').forEach(btn => {
-        const l = parseInt(btn.dataset.limb, 10);
-        const has = (mask & (1 << l)) !== 0;
-        btn.classList.toggle('cut', !has);
-      });
+      for (let i = 0; i < _limbBtns.length; i++) {
+        const it = _limbBtns[i];
+        const cut = (mask & it.bit) === 0;
+        if (it.prevCut !== cut) {
+          it.prevCut = cut;
+          it.el.classList.toggle('cut', cut);
+        }
+      }
     };
 
     const stamp = Date.now();
