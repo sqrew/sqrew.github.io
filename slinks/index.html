@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SLINKS — Spine & Limb Evolution Arena</title>
+  <style>
+    :root {
+      --bg-panel: rgba(12, 15, 22, 0.84);
+      --border: rgba(94, 234, 212, 0.22);
+      --accent: #2dd4bf;
+      --amber: #f59e0b;
+      --crimson: #f43f5e;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; user-select: none; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; background: #07090e;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text); font-size: 12px;
+    }
+    #canvas {
+      position: fixed; inset: 0; width: 100vw; height: 100vh; display: block;
+    }
+    .hud-panel {
+      position: fixed; background: var(--bg-panel);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.55); z-index: 10;
+      transition: opacity 0.2s ease;
+    }
+    body.hide-hud .hud-panel { opacity: 0; pointer-events: none; }
+    #left-panel { top: 14px; left: 14px; width: 292px; }
+    #right-panel { top: 14px; right: 14px; width: 296px; }
+    #bottom-dock {
+      bottom: 16px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px; align-items: center; padding: 8px 12px;
+    }
+    .brand {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 8px; padding-bottom: 6px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .brand h1 {
+      margin: 0; font-size: 15px; letter-spacing: 0.12em; color: var(--accent);
+    }
+    .brand span { font-size: 10px; color: var(--muted); }
+    .stat-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin-bottom: 10px;
+    }
+    .stat-box {
+      background: rgba(15, 23, 42, 0.65); border-radius: 6px; padding: 5px 8px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+    .stat-label { font-size: 9px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; }
+    .stat-val { font-size: 13px; font-weight: 700; color: #f8fafc; margin-top: 2px; }
+    .row { display: flex; gap: 6px; margin-bottom: 7px; align-items: center; }
+    .btn {
+      flex: 1; background: rgba(30, 41, 59, 0.82); color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.24); border-radius: 6px;
+      padding: 6px 8px; font-family: inherit; font-size: 11px; cursor: pointer;
+      transition: all 0.12s ease; text-align: center;
+    }
+    .btn:hover { border-color: var(--accent); color: #fff; }
+    .btn.active {
+      background: rgba(45, 212, 191, 0.20); border-color: var(--accent);
+      color: var(--accent); font-weight: 700;
+    }
+    .btn.danger.active, .btn.danger:hover {
+      background: rgba(244, 63, 94, 0.22); border-color: var(--crimson); color: #fda4af;
+    }
+    .slider-row { margin-bottom: 7px; }
+    .slider-hdr { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-bottom: 2px; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; margin: 0; }
+    .bar-wrap { margin-bottom: 6px; }
+    .bar-hdr { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 2px; color: var(--muted); }
+    .bar-bg { height: 6px; background: rgba(30, 41, 59, 0.9); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; width: 50%; border-radius: 3px; transition: width 0.12s linear; }
+    .limb-grid {
+      display: grid; grid-template-columns: 1fr 48px 1fr; gap: 5px;
+      align-items: center; margin: 8px 0; padding: 8px;
+      background: rgba(15, 23, 42, 0.68); border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+    .spine-pill {
+      grid-row: 1 / span 3; grid-column: 2; height: 100%;
+      background: rgba(45, 212, 191, 0.14); border: 1px dashed rgba(45, 212, 191, 0.45);
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      writing-mode: vertical-rl; font-size: 9px; letter-spacing: 0.15em; color: var(--accent);
+    }
+    .limb-btn {
+      padding: 5px 4px; border-radius: 5px; font-family: inherit; font-size: 10px;
+      cursor: pointer; font-weight: 700; border: 1px solid rgba(45, 212, 191, 0.45);
+      background: rgba(16, 185, 129, 0.18); color: #6ee7b7;
+    }
+    .limb-btn.cut {
+      background: rgba(244, 63, 94, 0.16); border-color: rgba(244, 63, 94, 0.45);
+      color: #fda4af; text-decoration: line-through;
+    }
+    .hint { font-size: 10px; color: var(--muted); line-height: 1.4; margin-top: 6px; }
+    #wgpu-err {
+      display: none; position: fixed; inset: 0; z-index: 100;
+      background: rgba(7, 9, 14, 0.95); align-items: center; justify-content: center;
+      text-align: center; padding: 24px;
+    }
+    #toast {
+      position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.94); border: 1px solid var(--accent);
+      color: var(--accent); padding: 6px 14px; border-radius: 999px;
+      font-size: 11px; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 20;
+    }
+    #doom-banner {
+      display: none; position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+      width: min(520px, calc(100vw - 630px)); min-width: 340px;
+      background: rgba(18, 8, 20, 0.88);
+      border: 1px solid rgba(244, 63, 94, 0.55); border-radius: 10px;
+      padding: 10px 14px; backdrop-filter: blur(10px);
+      box-shadow: 0 12px 36px rgba(244, 63, 94, 0.25); z-index: 12;
+    }
+    body.doom-active #doom-banner { display: block; }
+    body.doom-active #bottom-dock { display: none; }
+    .doom-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      font-weight: 800; font-size: 12px; letter-spacing: 0.08em; color: #fda4af;
+      margin-bottom: 4px;
+    }
+    .doom-adapt {
+      font-size: 11px; font-weight: 700; color: #fde047;
+      background: rgba(244, 63, 94, 0.14); border: 1px solid rgba(244, 63, 94, 0.30);
+      border-radius: 6px; padding: 5px 8px; margin-bottom: 7px; text-align: center;
+    }
+    @keyframes snarePulse {
+      from { background: rgba(244, 63, 94, 0.24); border-color: rgba(251, 113, 133, 0.55); }
+      to   { background: rgba(244, 63, 94, 0.52); border-color: #ffe4e6; box-shadow: 0 0 18px rgba(244, 63, 94, 0.55); }
+    }
+    .doom-adapt.snared {
+      color: #fff1f2; animation: snarePulse 0.32s infinite alternate;
+    }
+    .doom-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    #hurt-vignette {
+      position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: 0;
+      box-shadow: inset 0 0 110px 36px rgba(244, 63, 94, 0.78);
+      transition: opacity 0.06s linear;
+    }
+    .btn.doom-btn.active {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.34), rgba(168, 85, 247, 0.34));
+      border-color: #f43f5e; color: #ffe4e6; font-weight: 800;
+    }
+    .btn.colossus-btn.active, .btn.colossus-btn:hover {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.34), rgba(34, 211, 238, 0.34));
+      border-color: #f59e0b; color: #fef3c7; font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+  <div id="hurt-vignette"></div>
+
+  <!-- Top-Center Doomsday Duel & Shadow-of-the-Colossus Banner -->
+  <div id="doom-banner" class="hud-panel">
+    <div class="doom-hdr">
+      <span id="dm-title">☠️ THE DOOMSDAY AMALGAM · TIER 1</span>
+      <span id="dm-shards" style="color:#f43f5e;font-size:10px;">0 Flesh-Shards</span>
+    </div>
+    <div class="doom-adapt" id="dm-adapt">👁️ LOCKED ON ALCHEMIST — STALKING PREY</div>
+    <div class="bar-wrap" style="margin-bottom:7px;">
+      <div class="bar-hdr"><span id="dm-boss-lbl">🧠 Cranial Brain-Core Weakpoint</span><span id="dm-boss-txt">100%</span></div>
+      <div class="bar-bg" style="height:7px;"><div class="bar-fill" id="dm-boss-hp" style="background:linear-gradient(90deg,#f59e0b,#22d3ee);width:100%"></div></div>
+    </div>
+    <div class="doom-bars">
+      <div>
+        <div class="bar-hdr"><span id="dm-alch-lbl">⚗️ Alchemist HP</span><span id="dm-hp-txt">100%</span></div>
+        <div class="bar-bg"><div class="bar-fill" id="dm-hp" style="background:#22d3ee;width:100%"></div></div>
+      </div>
+      <div>
+        <div class="bar-hdr"><span>⚡ Brain-Smash Wand [RMB / E]</span><span id="dm-wand-txt">READY</span></div>
+        <div class="bar-bg"><div class="bar-fill" id="dm-wand" style="background:#e879f9;width:100%"></div></div>
+      </div>
+    </div>
+    <div style="font-size:9.5px;color:#cbd5e1;text-align:center;margin-top:6px;">
+      <b>WASD</b> Run / Climb Colossus · <b>SPACE</b> Vault &amp; Climb-Leap · <b>SHIFT+SPACE</b> Dismount · <b>RMB / [E]</b> Smash Brain! · <b>[K]</b> 10m · <b>[R]</b> Ragdoll · <b>[Y]</b> Yeet
+    </div>
+  </div>
+
+  <div id="wgpu-err">
+    <div style="max-width:460px;border:1px solid #f43f5e;border-radius:10px;padding:20px;background:#0f172a;">
+      <h2 style="margin-top:0;color:#fda4af;">WebGPU Required</h2>
+      <p style="color:#cbd5e1;line-height:1.5;">
+        SLINKS runs 16 simultaneous XPBD spine-and-limb creatures + 512 parallel MPPI foresight rollouts per frame on WebGPU compute shaders. Enable WebGPU in Chromium/Chrome or Firefox Nightly.
+      </p>
+    </div>
+  </div>
+
+  <!-- Left Panel: Arena Telemetry & Evolution Laws -->
+  <div id="left-panel" class="hud-panel">
+    <div class="brand">
+      <h1>SLINKS</h1>
+      <span id="fps-lbl">60 FPS</span>
+    </div>
+
+    <div class="row" style="margin-bottom:9px;">
+      <button class="btn active" id="btn-mode-eco" title="16 evolving Slinks — watch baby Slinks climb 10m Kaiju!">🌿 Eco (16)</button>
+      <button class="btn danger doom-btn" id="btn-mode-doom" title="Fight a 2.1m live-mutating Chameleon Amalgam! [V]">☠️ Duel</button>
+      <button class="btn colossus-btn" id="btn-mode-col" title="Shadow of the Colossus: Climb a 10m Kaiju & smash its Cranial Brain-Core! [K]">🏔️ Colossus</button>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-label">Gen / Births</div>
+        <div class="stat-val" id="st-gen">Gen 1 · 0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">MPPI Thinking</div>
+        <div class="stat-val" id="st-mppi">0 / 16</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Mean Speed</div>
+        <div class="stat-val" id="st-spd">0.00 m/s</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Mean Bone / Musc</div>
+        <div class="stat-val" id="st-tissue">24% / 28%</div>
+      </div>
+    </div>
+
+    <div style="font-size:9px;color:var(--muted);letter-spacing:0.06em;margin-bottom:4px;">BRAIN MODE [B]:</div>
+    <div class="row">
+      <button class="btn" data-mppi="0" title="0 GPU Rollouts — 100% Pure 456-Weight 2-Layer Morphology-Conditioned Spinal MLP!">🧠 OFF (Spinal)</button>
+      <button class="btn active" data-mppi="1" title="MPPI wakes ONLY on cliff/surprise/juvenile, sleeps when cruising">⚡ Burst</button>
+      <button class="btn" data-mppi="2" title="Continuous 32-rollout MPPI + DAgger training every frame">🔥 Always</button>
+    </div>
+
+    <div class="row">
+      <button class="btn active" data-warp="1">1× Live</button>
+      <button class="btn" data-warp="4">4× Fast</button>
+      <button class="btn" data-warp="10">10× Evolve</button>
+      <button class="btn" id="btn-pause">⏸</button>
+    </div>
+
+    <div class="row">
+      <button class="btn active" id="btn-xray" title="Cycle X-Ray Bone View [X]">🦴 X-Ray: Sel</button>
+      <button class="btn active" id="btn-ghosts" title="Cycle MPPI Foresight Arcs [G]">👻 Ghosts: Sel</button>
+      <button class="btn active" id="btn-sfx" style="flex:0.62;" title="Toggle Procedural Nightmare Synth">🔊 SFX</button>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-hdr"><span>Wolff Bone Ossification</span><span id="v-wolff">1.00×</span></div>
+      <input type="range" id="sl-wolff" min="0" max="2.5" step="0.05" value="1.00" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-hdr"><span>Davis Muscle Hypertrophy</span><span id="v-davis">1.00×</span></div>
+      <input type="range" id="sl-davis" min="0" max="2.5" step="0.05" value="1.00" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-hdr"><span>Cambrian Mutation Rate</span><span id="v-mut">1.00×</span></div>
+      <input type="range" id="sl-mut" min="0.1" max="2.5" step="0.05" value="1.00" />
+    </div>
+
+    <div class="row" style="margin-top:8px;margin-bottom:0;">
+      <button class="btn" id="btn-recenter" title="Recenter Camera">⌖ Cam</button>
+      <button class="btn danger" id="btn-wipe" title="Zero all Spinal Weights back to random noise!">🧠 Wipe Brains</button>
+      <button class="btn danger" id="btn-reset" title="Reseed Arena & Slinks">↻ Reset</button>
+    </div>
+    <div class="hint">
+      <b>LMB</b> Orbit · <b>Shift+LMB</b> Pan · <b>Wheel</b> Zoom<br/>
+      <b>RMB</b> (or <b>Alt+LMB</b>) Fire Active God-Hand Tool · <b>[H]</b> HUD
+    </div>
+  </div>
+
+  <!-- Right Panel: Selected Slink Biopsy & Limb Amputator -->
+  <div id="right-panel" class="hud-panel">
+    <div class="brand" style="margin-bottom:3px;padding-bottom:4px;">
+      <h1 id="sel-title" style="font-size:13.5px;">SLINK #0</h1>
+      <span id="sel-gen-spd">Gen 1 · 0.0 m/s</span>
+    </div>
+    <div id="sel-arch" style="font-size:10.5px;color:#cbd5e1;font-weight:700;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+      🐕 4-Leg Hound
+    </div>
+
+    <div class="bar-wrap">
+      <div class="bar-hdr"><span>ATP Energy & Meals</span><span id="b-nrg-txt">78 ATP · 0 pods</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="b-nrg" style="background:#10b981;width:60%"></div></div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-hdr"><span>Allometric Scale &amp; Height</span><span id="b-grow-txt">1.00× · 1.10m</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="b-grow" style="background:#38bdf8;width:46%"></div></div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-hdr"><span>Wolff Cortical Bone</span><span id="b-bone-txt">24%</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="b-bone" style="background:#f8fafc;width:24%"></div></div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-hdr"><span>Davis Muscle Belly</span><span id="b-musc-txt">28%</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="b-musc" style="background:#f43f5e;width:28%"></div></div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-hdr"><span>MPPI Surprise / Pounce</span><span id="b-surp-txt">55% · 0%</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="b-surp" style="background:#f59e0b;width:55%"></div></div>
+    </div>
+
+    <div id="sel-skel" style="font-size:10px;color:#6ee7b7;margin:5px 0 3px;text-align:center;background:rgba(15,23,42,0.7);padding:4px 6px;border-radius:5px;border:1px solid rgba(45,212,191,0.18);">
+      Spine 6 · Joints 3-2-3 · Head 1.95m (Upright)
+    </div>
+    <div id="sel-organs" style="font-size:9.6px;line-height:1.35;color:#fda4af;margin:3px 0 4px;text-align:center;background:rgba(30,15,35,0.68);padding:4px 6px;border-radius:5px;border:1px solid rgba(244,63,94,0.22);">
+      🧬 30 / 96 Nodes · 👁2 🐽1 👂2
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:4px;">Click any limb to amputate / regrow live:</div>
+    <div class="limb-grid">
+      <button class="limb-btn" data-limb="0">FL Leg</button>
+      <div class="spine-pill">SPINE</div>
+      <button class="limb-btn" data-limb="1">FR Leg</button>
+      <button class="limb-btn" data-limb="2">ML Leg</button>
+      <button class="limb-btn" data-limb="3">MR Leg</button>
+      <button class="limb-btn" data-limb="4">RL Leg</button>
+      <button class="limb-btn" data-limb="5">RR Leg</button>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="btn-next">⏭ Next [Tab]</button>
+      <button class="btn" id="btn-follow">🎥 Follow [F]</button>
+      <button class="btn danger" id="btn-carn" title="Flip Selected Slink between Herbivore & Crimson Carnivore!">🩸 Diet</button>
+    </div>
+    <div class="row" style="margin-bottom:0;">
+      <button class="btn" id="btn-stand" title="Toggle Upright 3-Joint Bipedal Stance vs All-Fours! [U]">🦖 Stand</button>
+      <button class="btn" id="btn-worm" title="Cycle Normal -> 22-Seg Worm -> 58-SEG LONG-BOI LEVIATHAN WORM! [W]">🐛 Worm</button>
+      <button class="btn" id="btn-horns" title="Cycle 12-Point Irish-Elk Antlers -> 3-Horn Triceratops Crown -> Shed! [A]">🦌 Horns</button>
+      <button class="btn danger" id="btn-ragdoll" title="Toggle 96-Node XPBD Ragdoll limpness on/off! [R] (Press [Y] to Yeet / Cave-Blast!)">💀 Rag</button>
+      <button class="btn" id="btn-mutate-sel" title="Full-body Spine/Limb/Organ metamorphosis! [M]">🧬 Morph</button>
+      <button class="btn" id="btn-export" style="flex:0.48;">🔗</button>
+    </div>
+  </div>
+
+  <!-- Bottom God-Hand Tool Dock (RMB / Alt+LMB in 3D) -->
+  <div id="bottom-dock" class="hud-panel">
+    <span style="font-size:10px;color:var(--muted);margin-right:4px;">RMB TOOL:</span>
+    <button class="btn active" data-tool="1">🔍 [1] Mind-Read</button>
+    <button class="btn danger" data-tool="2">⚡ [2] Amputate Limb</button>
+    <button class="btn" data-tool="3">🥩 [3] Yeet Meat</button>
+    <button class="btn" data-tool="4">🧬 [4] Mutate Hit</button>
+    <button class="btn danger" data-tool="17" title="Cave-Blast any 58-seg Leviathan Worm or Kaiju into a 96-node ragdoll bullwhip! [5] / [Y]">💀 [5] Ragdoll Yeet</button>
+  </div>
+
+  <div id="toast">Copied Slink DNA!</div>
+
+  <script>
+    if (!navigator.gpu) {
+      document.getElementById('wgpu-err').style.display = 'flex';
+    }
+
+    const canvas = document.getElementById('canvas');
+    let xrayState = 1;   // 0=Off (0.0), 1=Sel (0.5), 2=All (1.0)
+    let ghostState = 1;  // 0=Off (0.0), 1=Sel (1.0), 2=All (2.0)
+    let mppiMode = 1;    // 0=OFF (Pure Spinal), 1=Burst, 2=Always
+    let doomMode = false;
+    let keyMask  = 0;
+    let paused = false;
+    let followOn = false;
+    let sfxOn = true;
+
+    // Zero-Dependency Procedural WebAudio Nightmare Synth
+    let audioCtx = null;
+    let noiseBuf = null;
+    let liveBossDist = 18.0;
+    let liveTetherOn = 0;
+    let prevTetherOn = 0;
+    let prevAdaptCode = -1;
+    let prevTier = 1;
+    let prevFlanker = 0;
+    let prevHurt = 0;
+    let nextBeatMs = 0;
+
+    function ensureAudio() {
+      if (!sfxOn) return null;
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        audioCtx = new AC();
+        const sr = audioCtx.sampleRate;
+        noiseBuf = audioCtx.createBuffer(1, Math.floor(sr * 0.35), sr);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+    window.addEventListener('pointerdown', ensureAudio, { passive: true });
+    window.addEventListener('keydown', ensureAudio, { passive: true });
+
+    function sfxThump(ac, t0, fStart, fEnd, dur, gainPk) {
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(fStart, t0);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, fEnd), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(gainPk, t0 + 0.014);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
+    }
+
+    function sfxHarpoonLatch() {
+      const ac = ensureAudio(); if (!ac) return;
+      const t = ac.currentTime;
+      const osc = ac.createOscillator();
+      const flt = ac.createBiquadFilter();
+      const g = ac.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(720, t);
+      osc.frequency.exponentialRampToValueAtTime(165, t + 0.26);
+      flt.type = 'bandpass'; flt.Q.value = 4.5;
+      flt.frequency.setValueAtTime(1950, t);
+      flt.frequency.exponentialRampToValueAtTime(340, t + 0.26);
+      g.gain.setValueAtTime(0.001, t);
+      g.gain.linearRampToValueAtTime(0.18, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+      osc.connect(flt); flt.connect(g); g.connect(ac.destination);
+      osc.start(t); osc.stop(t + 0.30);
+    }
+
+    function sfxPlasmaSever() {
+      const ac = ensureAudio(); if (!ac) return;
+      const t = ac.currentTime;
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1480, t);
+      osc.frequency.exponentialRampToValueAtTime(95, t + 0.17);
+      g.gain.setValueAtTime(0.20, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t); osc.stop(t + 0.20);
+      if (noiseBuf) {
+        const ns = ac.createBufferSource();
+        const nf = ac.createBiquadFilter();
+        const ng = ac.createGain();
+        ns.buffer = noiseBuf;
+        nf.type = 'highpass'; nf.frequency.value = 900;
+        ng.gain.setValueAtTime(0.14, t);
+        ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+        ns.connect(nf); nf.connect(ng); ng.connect(ac.destination);
+        ns.start(t); ns.stop(t + 0.12);
+      }
+    }
+
+    function sfxBoneMorph() {
+      const ac = ensureAudio(); if (!ac || !noiseBuf) return;
+      const t = ac.currentTime;
+      const ns = ac.createBufferSource();
+      const nf = ac.createBiquadFilter();
+      const ng = ac.createGain();
+      ns.buffer = noiseBuf;
+      nf.type = 'bandpass'; nf.frequency.setValueAtTime(420, t); nf.Q.value = 2.8;
+      ng.gain.setValueAtTime(0.11, t);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.085);
+      ns.connect(nf); nf.connect(ng); ng.connect(ac.destination);
+      ns.start(t); ns.stop(t + 0.09);
+      sfxThump(ac, t, 130, 48, 0.09, 0.10);
+    }
+
+    function sfxBrainSmash(slain) {
+      const ac = ensureAudio(); if (!ac) return;
+      const t = ac.currentTime;
+      sfxThump(ac, t, slain ? 190 : 155, 22, slain ? 0.55 : 0.34, 0.36);
+      const freqs = slain ? [330, 495, 660, 990] : [293.7, 440, 587.3];
+      freqs.forEach((f, idx) => {
+        const osc = ac.createOscillator();
+        const g   = ac.createGain();
+        osc.type  = (idx % 2 === 0) ? 'triangle' : 'sawtooth';
+        osc.frequency.setValueAtTime(f * 1.18, t);
+        osc.frequency.exponentialRampToValueAtTime(f * (slain ? 1.5 : 0.72), t + (slain ? 0.52 : 0.28));
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.linearRampToValueAtTime(0.11, t + 0.018);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + (slain ? 0.56 : 0.30));
+        osc.connect(g); g.connect(ac.destination);
+        osc.start(t); osc.stop(t + (slain ? 0.58 : 0.32));
+      });
+    }
+
+    function sfxRagdollSlam(yeeted) {
+      const ac = ensureAudio(); if (!ac) return;
+      const t = ac.currentTime;
+      sfxThump(ac, t,        yeeted ? 185 : 120, 26, yeeted ? 0.28 : 0.20, 0.28);
+      sfxThump(ac, t + 0.08, 92,                 24, 0.16,                 0.18);
+      if (noiseBuf) {
+        [0.0, 0.055, 0.11].forEach((dt, i) => {
+          const ns = ac.createBufferSource();
+          const nf = ac.createBiquadFilter();
+          const ng = ac.createGain();
+          ns.buffer = noiseBuf;
+          nf.type = 'bandpass'; nf.frequency.value = 540 - i * 110; nf.Q.value = 3.2;
+          ng.gain.setValueAtTime(0.11, t + dt);
+          ng.gain.exponentialRampToValueAtTime(0.0001, t + dt + 0.075);
+          ns.connect(nf); nf.connect(ng); ng.connect(ac.destination);
+          ns.start(t + dt); ns.stop(t + dt + 0.085);
+        });
+      }
+    }
+
+    setInterval(() => {
+      if (!doomMode || paused || !sfxOn || !audioCtx || audioCtx.state !== 'running') return;
+      if (liveBossDist > 12.2 && !liveTetherOn) return;
+      const nowMs = performance.now();
+      if (nowMs < nextBeatMs) return;
+      const prox = Math.min(1.0, Math.max(0.0, (12.2 - liveBossDist) / 9.8) + (liveTetherOn ? 0.30 : 0.0));
+      const periodMs = 1120 - prox * 730; // 53 BPM -> 154 BPM panic!
+      nextBeatMs = nowMs + Math.max(360, periodMs);
+      const vol = 0.025 + 0.24 * prox * prox;
+      const t = audioCtx.currentTime;
+      sfxThump(audioCtx, t,        48, 25, 0.12, vol);
+      sfxThump(audioCtx, t + 0.13, 58, 29, 0.10, vol * 0.78);
+    }, 45);
+
+    function setParam(id, val) {
+      if (window.Module && Module._sl_set_param) {
+        Module._sl_set_param(id, val);
+      }
+    }
+    function trigCmd(cmd) {
+      if (window.Module && Module._sl_trigger_cmd) {
+        Module._sl_trigger_cmd(cmd);
+      }
+    }
+    function syncKeys() {
+      if (window.Module && Module._sl_set_keys) {
+        Module._sl_set_keys(doomMode ? keyMask : 0);
+      }
+    }
+
+    let colossusMode = false;
+
+    function setDoomMode(modeVal) {
+      // modeVal: 0 = Ecosystem, 1 = Classic 2.1m Duel, 2 = 10m Shadow-of-the-Colossus Raid!
+      doomMode     = modeVal > 0;
+      colossusMode = modeVal === 2;
+      keyMask = 0;
+      prevTetherOn = 0; prevAdaptCode = -1; prevTier = 1; prevFlanker = 0;
+      syncKeys();
+      document.body.classList.toggle('doom-active', doomMode);
+      document.getElementById('btn-mode-eco').classList.toggle('active', modeVal === 0);
+      document.getElementById('btn-mode-doom').classList.toggle('active', modeVal === 1);
+      document.getElementById('btn-mode-col').classList.toggle('active', modeVal === 2);
+      if (doomMode) {
+        paused = false;
+        const pb = document.getElementById('btn-pause');
+        pb.classList.remove('active');
+        pb.textContent = '⏸';
+        document.querySelectorAll('[data-warp]').forEach(b => b.classList.toggle('active', b.dataset.warp === '1'));
+        if (mppiMode === 0) selectMppi(1);
+        if (xrayState === 1) {
+          xrayState = 0;
+          const xb = document.getElementById('btn-xray');
+          xb.textContent = '🦴 X-Ray: Off';
+          xb.classList.remove('active');
+          setParam(0, 0.0);
+        }
+        showToast(colossusMode
+          ? '🏔️ SHADOW OF THE COLOSSUS: Jump onto its 6m legs, climb up its spine to the skull & smash the glowing Brain-Core!'
+          : '☠️ DOOMSDAY DUEL: Chameleon Predator active! ([K] summons 10m SotC Colossus!)');
+      } else {
+        document.getElementById('hurt-vignette').style.opacity = '0';
+        if (xrayState === 0) {
+          xrayState = 1;
+          const xb = document.getElementById('btn-xray');
+          xb.textContent = '🦴 X-Ray: Sel';
+          xb.classList.add('active');
+          setParam(0, 0.5);
+        }
+        showToast('🌿 Reseeded 16-Slink Ecosystem (watch baby Slinks climb the 10m Kaiju!)');
+      }
+      setParam(14, modeVal);
+    }
+    document.getElementById('btn-mode-eco').addEventListener('click',  () => setDoomMode(0));
+    document.getElementById('btn-mode-doom').addEventListener('click', () => setDoomMode(1));
+    document.getElementById('btn-mode-col').addEventListener('click',  () => setDoomMode(2));
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.opacity = '1';
+      clearTimeout(t._tm);
+      t._tm = setTimeout(() => { t.style.opacity = '0'; }, 1800);
+    }
+
+    // Prevent HUD clicks from spinning 3D camera
+    document.querySelectorAll('.hud-panel').forEach(el => {
+      el.addEventListener('pointerenter', () => setParam(10, 1));
+      el.addEventListener('pointerleave', () => setParam(10, 0));
+    });
+
+    function syncViewport() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.max(64, Math.floor(window.innerWidth * dpr));
+      const h = Math.max(64, Math.floor(window.innerHeight * dpr));
+      canvas.width = w;
+      canvas.height = h;
+      if (window.Module && Module._sl_resize_canvas) {
+        Module._sl_resize_canvas(w, h);
+      }
+    }
+    window.addEventListener('resize', syncViewport);
+
+    // Brain Mode (MPPI OFF / Burst / Always)
+    function selectMppi(m) {
+      mppiMode = m;
+      document.querySelectorAll('[data-mppi]').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.mppi, 10) === m);
+      });
+      setParam(13, m);
+      const bNames = ['🧠 Brain Mode: OFF (Pure 3D Spinal Reflex)', '⚡ Brain Mode: Burst MPPI Foresight', '🔥 Brain Mode: Always MPPI + DAgger'];
+      showToast(bNames[m] || bNames[1]);
+    }
+    document.querySelectorAll('[data-mppi]').forEach(btn => {
+      btn.addEventListener('click', () => selectMppi(parseInt(btn.dataset.mppi, 10)));
+    });
+
+    // Warp buttons
+    document.querySelectorAll('[data-warp]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-warp]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        setParam(4, parseFloat(btn.dataset.warp));
+      });
+    });
+
+    // God-Hand tools
+    function selectTool(t) {
+      document.querySelectorAll('[data-tool]').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.tool, 10) === t);
+      });
+      setParam(3, t);
+    }
+    document.querySelectorAll('[data-tool]').forEach(btn => {
+      btn.addEventListener('click', () => selectTool(parseInt(btn.dataset.tool, 10)));
+    });
+
+    document.getElementById('btn-pause').addEventListener('click', (e) => {
+      paused = !paused;
+      e.currentTarget.classList.toggle('active', paused);
+      e.currentTarget.textContent = paused ? '▶' : '⏸';
+      setParam(5, paused ? 1 : 0);
+    });
+
+    function cycleXray() {
+      xrayState = (xrayState + 1) % 3;
+      const btn = document.getElementById('btn-xray');
+      const labels = ['🦴 X-Ray: Off', '🦴 X-Ray: Sel', '🦴 X-Ray: All'];
+      const vals   = [0.0, 0.5, 1.0];
+      btn.textContent = labels[xrayState];
+      btn.classList.toggle('active', xrayState > 0);
+      setParam(0, vals[xrayState]);
+    }
+    document.getElementById('btn-xray').addEventListener('click', cycleXray);
+
+    function cycleGhosts() {
+      ghostState = (ghostState + 1) % 3;
+      const btn = document.getElementById('btn-ghosts');
+      const labels = ['👻 Ghosts: Off', '👻 Ghosts: Sel', '👻 Ghosts: All'];
+      const vals   = [0.0, 1.0, 2.0];
+      btn.textContent = labels[ghostState];
+      btn.classList.toggle('active', ghostState > 0);
+      setParam(1, vals[ghostState]);
+    }
+    document.getElementById('btn-ghosts').addEventListener('click', cycleGhosts);
+
+    document.getElementById('btn-sfx').addEventListener('click', (e) => {
+      sfxOn = !sfxOn;
+      e.currentTarget.classList.toggle('active', sfxOn);
+      e.currentTarget.textContent = sfxOn ? '🔊 SFX' : '🔇 Mute';
+      if (sfxOn) ensureAudio();
+    });
+
+    function bindSlider(id, lblId, paramId) {
+      const el = document.getElementById(id);
+      const lbl = document.getElementById(lblId);
+      el.addEventListener('input', () => {
+        const v = parseFloat(el.value);
+        lbl.textContent = v.toFixed(2) + '×';
+        setParam(paramId, v);
+      });
+    }
+    bindSlider('sl-wolff', 'v-wolff', 6);
+    bindSlider('sl-davis', 'v-davis', 7);
+    bindSlider('sl-mut',   'v-mut',   8);
+
+    document.getElementById('btn-recenter').addEventListener('click', () => trigCmd(2));
+    document.getElementById('btn-wipe').addEventListener('click', () => {
+      trigCmd(5);
+      showToast('Wiped all 16 Spinal Brains back to blank random noise!');
+    });
+    document.getElementById('btn-reset').addEventListener('click',    () => trigCmd(1));
+    document.getElementById('btn-next').addEventListener('click',       () => trigCmd(3));
+    document.getElementById('btn-carn').addEventListener('click',       () => trigCmd(6));
+    document.getElementById('btn-stand').addEventListener('click',      () => trigCmd(8));
+    document.getElementById('btn-worm').addEventListener('click',       () => trigCmd(9));
+    document.getElementById('btn-horns').addEventListener('click',      () => trigCmd(19));
+    document.getElementById('btn-ragdoll').addEventListener('click',    () => trigCmd(18));
+    document.getElementById('btn-mutate-sel').addEventListener('click', () => trigCmd(4));
+
+    function toggleFollow() {
+      followOn = !followOn;
+      document.getElementById('btn-follow').classList.toggle('active', followOn);
+      setParam(12, followOn ? 1 : 0);
+    }
+    document.getElementById('btn-follow').addEventListener('click', toggleFollow);
+
+    document.querySelectorAll('[data-limb]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const l = parseInt(btn.dataset.limb, 10);
+        trigCmd(10 + l);
+      });
+    });
+
+    document.getElementById('btn-export').addEventListener('click', () => {
+      if (window.Module && Module._sl_export_selected_json) {
+        const ptr = Module._sl_export_selected_json();
+        const hash = Module.UTF8ToString(ptr);
+        history.replaceState(null, '', hash);
+        if (navigator.clipboard) navigator.clipboard.writeText(location.href);
+        showToast('Copied ' + hash + ' to URL & clipboard!');
+      }
+    });
+
+    function keyBitFor(e) {
+      const k = e.key;
+      if (k === 'w' || k === 'W' || k === 'ArrowUp')    return 1;
+      if (k === 's' || k === 'S' || k === 'ArrowDown')  return 2;
+      if (k === 'a' || k === 'A' || k === 'ArrowLeft')  return 4;
+      if (k === 'd' || k === 'D' || k === 'ArrowRight') return 8;
+      if (k === ' ')                                    return 16;
+      if (k === 'Shift' || k === 'c' || k === 'C')      return 32;
+      if (k === 'e' || k === 'E')                       return 64;
+      return 0;
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (doomMode) {
+        const bit = keyBitFor(e);
+        if (bit) {
+          if (bit === 16 || e.key.startsWith('Arrow')) e.preventDefault();
+          keyMask |= bit;
+          syncKeys();
+        }
+      }
+      if (!doomMode && e.key === '1') selectTool(1);
+      else if (!doomMode && e.key === '2') selectTool(2);
+      else if (!doomMode && e.key === '3') selectTool(3);
+      else if (!doomMode && e.key === '4') selectTool(4);
+      else if (!doomMode && e.key === '5') selectTool(17);
+      else if (e.key === 'r' || e.key === 'R') trigCmd(18);
+      else if (e.key === 'y' || e.key === 'Y') trigCmd(17);
+      else if (e.key === 'v' || e.key === 'V') setDoomMode(doomMode ? 0 : 1);
+      else if (e.key === 'k' || e.key === 'K') setDoomMode((doomMode && colossusMode) ? 0 : 2);
+      else if (e.key === 'u' || e.key === 'U') trigCmd(8);
+      else if (!doomMode && (e.key === 'w' || e.key === 'W')) trigCmd(9);
+      else if (!doomMode && (e.key === 'a' || e.key === 'A')) trigCmd(19);
+      else if (e.key === 'x' || e.key === 'X') cycleXray();
+      else if (e.key === 'g' || e.key === 'G') cycleGhosts();
+      else if (e.key === 'b' || e.key === 'B') selectMppi((mppiMode + 1) % 3);
+      else if (e.key === 'm' || e.key === 'M') trigCmd(4);
+      else if (!doomMode && (e.key === 'f' || e.key === 'F')) toggleFollow();
+      else if (e.key === 'h' || e.key === 'H') document.body.classList.toggle('hide-hud');
+      else if (e.key === 'p' || e.key === 'P' || (!doomMode && e.key === ' ')) {
+        e.preventDefault();
+        document.getElementById('btn-pause').click();
+      }
+      else if (!doomMode && e.key === 'Tab') { e.preventDefault(); trigCmd(3); }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const bit = keyBitFor(e);
+      if (bit) {
+        keyMask &= ~bit;
+        syncKeys();
+      }
+    });
+    window.addEventListener('blur', () => { keyMask = 0; syncKeys(); });
+
+    const ADAPT_LABELS = [
+      '👁️ CLOSE-QUARTERS STRIKE — LUNGING JAWS & SCYTHES!',
+      '🦖 MORPH-MPPI → EVOLVED UPRIGHT SPRINT STANCE!',
+      '🦘 MORPH-MPPI → ELONGATING 3-JOINT VAULT THRUSTERS!',
+      '🧬 MORPH-MPPI → COMPRESSING SKELETON UNDER LOW CEILING!',
+      '🕷️ MORPH-MPPI → SPLAYING 6-LEG ARACHNID TRACTION!',
+      '🩸 LIMB SEVERED → TRAUMA SCAR & SYNAPTIC FEAR ADAPTATION!',
+      '🕵️ HUNTING FADING SCENT CLOUD — TARGET STEALTHED!',
+      '🛡️ DODGING LASER CONE → FLANKING AROUND CROSSHAIR!',
+      '🧠 PAIN-SCAR MEMORY → REROUTING AROUND AMBUSH ZONE!',
+      '⚡ WAND RELOAD DETECTED (0.85s) → PUNISHING COOLDOWN!',
+      '🎯 PREDICTING PREY VELOCITY → CUTTING INTERCEPT CHORD!',
+      '🦀 MANTIS DOUBLE-SCYTHE GRAPPLE — CLINCHING PREY!',
+      '🦎 CHROMATOPHORE CLOAK ACTIVE → BLENDING INTO SUBSTRATE!',
+      '🕷️ 3D SDF WALL/CEILING ADHESION → SCALING VERTICAL ROCK!',
+      '🦅 3D PARKOUR WALL-KICK → BALLISTIC AIRBORNE POUNCE!',
+      '🧗 RIDER CLIMBING COLOSSUS → BUCKING SKULL TO SHAKE YOU OFF!',
+      '🏔️ SHADOW OF THE COLOSSUS — CLIMB ITS LEGS & SPINE TO SMASH THE BRAIN!',
+      '💀 COLOSSUS SLAIN — 10m RAGDOLL COLLAPSING! NEXT TITAN AWAKENING...',
+      '💫 NEUROMUSCULAR RAGDOLL — BONES & ORGANS FLOPPING LIMP!'
+    ];
+
+    function classifyMorph(mask, spineCnt, isCarn, hfPct, uprightPct, totalNodes, organPack, specialPack, headHeightM, scaleMul) {
+      let n = 0;
+      for (let i = 0; i < 6; i++) if (mask & (1 << i)) n++;
+      const hM = headHeightM || 1.0, sM = scaleMul || 1.0;
+      let sizeTag = '';
+      if (hM >= 6.8 || sM >= 3.4)       sizeTag = '🏔️ KAIJU ';
+      else if (hM >= 3.4 || sM >= 2.0)  sizeTag = '🦕 Behemoth ';
+      else if (hM >= 2.15 && sM >= 1.32) sizeTag = '🐗 Dire ';
+      else if (hM <= 0.56 && sM <= 0.54) sizeTag = '🐜 Pygmy ';
+      const dietTag = ((isCarn >= 2) ? '☠️ ' : (isCarn ? '🩸 ' : '')) + sizeTag;
+      const op = organPack || 0, sp = specialPack || 0;
+      const cClaw  = Math.floor(op / 1000), cWeap = Math.floor(op / 100) % 10, cEye = Math.floor(op / 10) % 10;
+      const cAntlr = Math.floor(sp / 1000000);
+      const cEctSp = Math.floor(sp / 10000) % 100;
+      const cWing  = Math.floor(sp / 1000) % 10, cShld = Math.floor(sp / 100) % 10, cGlnd = Math.floor(sp / 10) % 10;
+      if (n === 0 && (spineCnt || 0) >= 34) {
+        if (cAntlr >= 2) return dietTag + '🐉 ' + spineCnt + '-Seg Horned Dragon-Leviathan';
+        if (cClaw >= 3)  return dietTag + '🐉 ' + spineCnt + '-Seg Velvet-Leviathan';
+        return dietTag + '🐉 ' + spineCnt + '-Seg Shai-Hulud Leviathan';
+      }
+      if (cAntlr >= 4 && !isCarn) return dietTag + '🦌 Crowned Irish-Elk Stag';
+      if (cAntlr === 3 && !isCarn) return dietTag + '🦏 3-Horn Triceratops Charger';
+      if (cAntlr >= 2 && isCarn)   return dietTag + '👹 Horned Wendigo Predator';
+      if (cAntlr >= 2)             return dietTag + '🐏 Horned Bighorn Charger';
+      if ((totalNodes || 0) >= 48) {
+        if (cEctSp >= 3)            return dietTag + '🐙 Fractal Grafted-Scion Chimera';
+        if (cWing > 0 && cWeap > 0) return dietTag + '🦇 Winged Scorp-Chimera';
+        if (n + cClaw >= 10)        return dietTag + '🕷️ ' + (n + cClaw) + '-Arm Eldritch Weaver';
+        if (cShld >= 2)             return dietTag + '🛡️ Armored Changeling Hydra';
+        return dietTag + '🧬 ' + totalNodes + '-Node Cronenberg Amalgam';
+      }
+      if (cEctSp >= 2) return dietTag + '🦴 Grafted-Scion Twin-Spine';
+      if (cWing >= 2) return dietTag + '🦇 Winged Spire-Wyvern';
+      if (n === 0 && cClaw >= 3) return dietTag + '🦶 ' + cClaw + '-Footed Velvet-Worm';
+      if (n + cClaw >= 10) return dietTag + '🦶 ' + (n + cClaw) + '-Footed Eldritch Crawler';
+      if (cClaw >= 3)      return dietTag + '🦀 ' + (n + cClaw) + '-Footed Headcrab Chimera';
+      if (cEye === 0 && (mask & 63) === 0) return dietTag + '🕶️ Blind Supersniff Worm';
+      if (n === 0 && (spineCnt || 0) >= 12) return dietTag + '🐛 ' + spineCnt + '-Seg Noita Worm';
+      if (n === 0)                          return dietTag + '🐍 ' + (spineCnt || 6) + '-Seg Serpent';
+      if ((uprightPct || 0) >= 55 && (mask & 48) !== 0) {
+        if ((mask & 3) !== 0) return dietTag + '🦖 Upright Mantis-Raptor';
+        return dietTag + '🦩 Upright Ostrich-Titan';
+      }
+      if (n === 2 && (mask & 48) === 48) return dietTag + '🦖 Biped Raptor';
+      if (n === 6 && spineCnt >= 7)      return dietTag + '🐛 ' + spineCnt + '-Seg Scolopendra';
+      if (n === 6 && spineCnt <= 3)      return dietTag + '🕷️ Harvestman Wall-Spider';
+      if (hfPct > 195)                   return dietTag + (isCarn ? '🦖 T-Rex Stalker' : '🦘 Kangaroo Leaper');
+      if (hfPct < 55 && n >= 2)          return dietTag + '🦍 Skullcrawler';
+      if (n === 6)                       return dietTag + '🦎 6-Leg Wall-Crawler';
+      if (n === 5)                       return dietTag + '🧬 5-Leg Chimera';
+      if (n === 4)                       return dietTag + (isCarn ? '🐊 Komodo Stalker' : '🐕 4-Leg Hound');
+      if (n === 3)                       return dietTag + '⚡ 3-Leg Tripod';
+      return dietTag + '🦿 1-Leg Hopper';
+    }
+
+    window.sl_on_stats = function(
+      maxGen, births, meanSpd, meanBone, meanMusc, fps,
+      selId, mask, nrg, grow, selBone, selMusc, selSpd, selGen, selEaten, surp, pounce,
+      mppiCnt, selMppiOn, spineCnt, isCarn, hfPct,
+      isDoom, playerHp, wandCd, adaptCode, shardCnt, hurtFlash,
+      jointsPack, uprightPct, headHeightM,
+      tetherOn, bossDist, flankerAlive, tdLearns, scentConf, gaitSyncPct,
+      totalNodes, organPack, specialPack, organEvt,
+      bossHp, colossusKills, isClimbing, ecoClimbers, ragState
+    ) {
+      document.getElementById('fps-lbl').textContent   = Math.round(fps) + ' FPS';
+      const packExtra = shardCnt || 0;
+      const pureShards = Math.max(0, packExtra - (flankerAlive ? 1 : 0));
+      const ecoRiders = ecoClimbers || 0;
+      const rs         = (typeof ragState === 'number') ? ragState : 100;
+      const ragTonePct = rs % 200;
+      const isCorpse   = (rs % 400) >= 200;
+      const isRagLock  = rs >= 400;
+      const isLimpNow  = isCorpse || isRagLock || (ragTonePct < 35);
+      document.getElementById('st-gen').textContent    = isDoom
+        ? ('Tier ' + selGen + ((colossusKills > 0) ? (' · 🏆' + colossusKills) : (' · ' + packExtra + ' Spawn')))
+        : ('Gen ' + maxGen + ' · ' + births + (ecoRiders > 0 ? (' · 🧗' + ecoRiders) : ''));
+      const totSlots = isDoom ? (1 + packExtra) : 16;
+      document.getElementById('st-mppi').textContent   = (mppiMode === 0) ? ('OFF (0/' + totSlots + ')') : (mppiCnt + ' / 16');
+      document.getElementById('st-mppi').style.color   = (mppiCnt > 0 && mppiMode > 0) ? '#f59e0b' : '#2dd4bf';
+      document.getElementById('st-spd').textContent    = meanSpd.toFixed(2) + ' m/s';
+      document.getElementById('st-tissue').textContent = Math.round(meanBone) + '% / ' + Math.round(meanMusc) + '%';
+
+      const brainTag = isCorpse
+        ? '💀 CORPSE'
+        : (isLimpNow ? ('💫 LIMP ' + ragTonePct + '%') : ((selMppiOn && mppiMode > 0) ? '⚡ MPPI' : '🧠 SPINAL'));
+      document.getElementById('sel-title').textContent   = isDoom ? ('☠️ AMALGAM · ' + brainTag) : ('SLINK #' + selId + ' · ' + brainTag);
+      const genTag = isDoom ? ('Tier ' + selGen) : ('Gen ' + selGen);
+      document.getElementById('sel-gen-spd').textContent = genTag + ' · ' + selSpd.toFixed(1) + ' m/s';
+      const scaleMul = Math.max(0.1, (grow || 100) / 100.0);
+      document.getElementById('sel-arch').textContent    = classifyMorph(mask, spineCnt || 5, isCarn, hfPct || 100, uprightPct || 0, totalNodes, organPack, specialPack, headHeightM, scaleMul);
+      document.getElementById('btn-carn').classList.toggle('active', !!isCarn);
+      document.getElementById('btn-stand').classList.toggle('active', (uprightPct || 0) >= 55 && (mask & 48) !== 0);
+      document.getElementById('btn-worm').classList.toggle('active', (mask & 63) === 0);
+      document.getElementById('btn-ragdoll').classList.toggle('active', isRagLock || (!isCorpse && ragTonePct < 35));
+
+      const jp = jointsPack || 222;
+      const jf = Math.floor(jp / 100) % 10;
+      const jm = Math.floor(jp / 10) % 10;
+      const jh = jp % 10;
+      if ((mask & 63) === 0) {
+        document.getElementById('sel-skel').textContent =
+          'Spine ' + (spineCnt || 18) + ' Segs · Ventral Scales · Head ' + (headHeightM || 0.2).toFixed(2) + 'm';
+      } else {
+        let limbN = 0;
+        for (let i = 0; i < 6; i++) if (mask & (1 << i)) limbN++;
+        const gs = (typeof gaitSyncPct === 'number') ? gaitSyncPct : 50;
+        let gaitLbl = 'Trot';
+        if (limbN === 1 || limbN === 3 || limbN === 5) gaitLbl = 'Crutch';
+        else if (gs >= 74) gaitLbl = ((uprightPct || 0) >= 55 || limbN === 2) ? 'Pronk' : 'Bound';
+        else if (gs >= 52) gaitLbl = (limbN >= 6) ? 'Wave' : 'Gallop';
+        else if (limbN >= 6 && gs >= 26) gaitLbl = 'Metachronal';
+        const stLbl = ((uprightPct || 0) >= 55 && (mask & 48) !== 0)
+          ? ('Upright ' + uprightPct + '%')
+          : ((limbN >= 2) ? 'Cling' : 'Sprawl');
+        document.getElementById('sel-skel').textContent =
+          'Spine ' + (spineCnt || 5) + ' · ' + jf + '-' + jm + '-' + jh + 'j · ' + gaitLbl + ' · ' + (headHeightM || 0.5).toFixed(2) + 'm (' + stLbl + ')';
+      }
+
+      const op  = organPack || 0;
+      const sp  = specialPack || 0;
+      const cClaw  = Math.floor(op / 1000);
+      const cWeap  = Math.floor(op / 100) % 10;
+      const cEye   = Math.floor(op / 10) % 10;
+      const cSnoot = op % 10;
+      const cAntlr = Math.floor(sp / 1000000);
+      const cEctSp = Math.floor(sp / 10000) % 100;
+      const cWing  = Math.floor(sp / 1000) % 10;
+      const cShld  = Math.floor(sp / 100) % 10;
+      const cGlnd  = Math.floor(sp / 10) % 10;
+      const cEarV  = sp % 10;
+      document.getElementById('btn-horns').classList.toggle('active', cAntlr > 0);
+      const orgTags = ['🧬 ' + (totalNodes || 24) + '/96n'];
+      if (cAntlr > 0) orgTags.push('🦌' + cAntlr);
+      if (cEctSp > 0) orgTags.push('🦴+' + cEctSp + 'sp');
+      if (cClaw > 0)  orgTags.push('🦶+' + cClaw);
+      if (cWeap > 0)  orgTags.push('⚔' + cWeap);
+      if (cWing > 0)  orgTags.push('🦇' + cWing);
+      if (cShld > 0)  orgTags.push('🛡' + cShld);
+      if (cGlnd > 0)  orgTags.push('🧪' + cGlnd);
+      orgTags.push(cEye > 0 ? ('👁' + cEye) : '🕶0');
+      if (cSnoot > 0) orgTags.push('🐽' + cSnoot);
+      if (cEarV > 0)  orgTags.push('👂' + cEarV);
+      document.getElementById('sel-organs').textContent = orgTags.join(' · ');
+
+      if (organEvt === 1) {
+        sfxBoneMorph();
+        showToast('🛡️ CHITIN CARAPACE DEFLECTED LASER! Aim around the armor plate!');
+      } else if (organEvt === 2) {
+        sfxBoneMorph();
+        showToast('🐽 SNOOT BOOPED! Inflicted 4.5s -88% Nose-Blind Olfactory Stun!');
+      } else if (organEvt === 3) {
+        sfxPlasmaSever();
+        showToast('💥 VOLATILE GLAND RUPTURED ONTO CREATURE!');
+      } else if (organEvt === 5) {
+        sfxBoneMorph();
+        showToast('🦴 FULL-BODY METAMORPHOSIS: Spine, Limbs, Organs & Ectopic Limb-Spines Re-Sculpted!');
+      } else if (organEvt === 4 && isDoom) {
+        sfxBoneMorph();
+        showToast('🧬 MORPH-MPPI DREAM-BUD: Extruding new Cronenberg appendage!');
+      } else if (organEvt === 6) {
+        sfxBrainSmash(false);
+        showToast('⚡ CRANIAL BRAIN-CORE SMASHED! (-35% BOSS HP) — HOLD ONTO THE SKULL!');
+      } else if (organEvt === 7) {
+        sfxBrainSmash(true);
+        sfxRagdollSlam(true);
+        showToast('🏆 COLOSSUS BRAIN OBLITERATED! WATCH THE 10m TITAN COLLAPSE!');
+      } else if (organEvt === 8) {
+        sfxBoneMorph();
+        showToast('🛡️ ARMORED SKULL DEFLECTED GROUND SHOT (-4%) — CLIMB ITS LEGS TO SMASH THE BRAIN!');
+      } else if (organEvt === 9) {
+        sfxRagdollSlam(true);
+        showToast('💀 CAVE-BLAST RAGDOLL YEET! 96-node skeleton whipping & tumbling ballistic!');
+      } else if (organEvt === 10) {
+        sfxRagdollSlam(false);
+        showToast('💀 MOTOR STRINGS CUT! Full 96-node XPBD ragdoll active — press [R] to wake!');
+      } else if (organEvt === 11) {
+        sfxBoneMorph();
+        showToast('⚡ NEUROMUSCULAR TONE RESTORING — Pushing back up onto its feet!');
+      } else if (organEvt === 12) {
+        sfxBoneMorph();
+        sfxRagdollSlam(false);
+        showToast('🐉 58-SEG LONG-BOI LEVIATHAN AWAKENED! Hit [Y] or [5]+RMB to cave-blast it!');
+      } else if (organEvt === 13) {
+        sfxBoneMorph();
+        showToast('🐛 22-Seg Tunnel-Worm! Press [W] again to unleash 58-SEG SHAI-HULUD LEVIATHAN!');
+      } else if (organEvt === 14) {
+        sfxRagdollSlam(true);
+        showToast('🦌 ANTLER GORE-TOSS! Calcified horns hurled attacker into a flying 96-node ragdoll!');
+      } else if (organEvt === 15) {
+        sfxPlasmaSever();
+        showToast('💥 CALCIFIED ANTLER TINE SHATTERED!');
+      } else if (organEvt === 16) {
+        sfxBoneMorph();
+        showToast('🐏 STAG RUTTING CLASH! Antlers locked & ossified thicker via Wolff\'s Law!');
+      } else if (organEvt === 17) {
+        sfxBoneMorph();
+        showToast('🦌 12-POINT IRISH-ELK ANTLER CROWN SPROUTED! Press [A] again for Triceratops Gore-Horns!');
+      } else if (organEvt === 18) {
+        sfxBoneMorph();
+        showToast('🦏 3-HORN TRICERATOPS GORE-CROWN ARMED! Herbivores will now RAM & GORE predators!');
+      } else if (organEvt === 19) {
+        sfxBoneMorph();
+        showToast('🦴 Antler rack shed cleanly!');
+      }
+
+      const bHp = (typeof bossHp === 'number') ? Math.max(0, Math.min(100, bossHp)) : 100;
+      const maxAtpEst = 135.0 * Math.min(2.6, Math.max(0.78, Math.pow(scaleMul, 0.65)));
+      document.getElementById('b-nrg-txt').textContent  = isDoom ? ('🧠 ' + Math.round(bHp) + '% BRAIN') : (Math.round(nrg) + ' ATP · ' + selEaten + ' pods');
+      document.getElementById('b-nrg').style.width      = isDoom ? (bHp + '%') : (Math.min(100, Math.max(2, (nrg / maxAtpEst) * 100)) + '%');
+      const hDisp = (headHeightM || 0.8);
+      document.getElementById('b-grow-txt').textContent = scaleMul.toFixed(2) + '× · ' + hDisp.toFixed(2) + 'm';
+      const logBar = Math.min(100, Math.max(4, ((Math.log(Math.max(scaleMul, 0.24)) - Math.log(0.24)) / (Math.log(5.4) - Math.log(0.24))) * 100));
+      const growEl = document.getElementById('b-grow');
+      growEl.style.width      = logBar + '%';
+      growEl.style.background = (hDisp >= 6.8 || scaleMul >= 3.4) ? '#f59e0b' : ((scaleMul <= 0.54) ? '#a78bfa' : '#38bdf8');
+      document.getElementById('b-bone-txt').textContent = Math.round(selBone) + '%';
+      document.getElementById('b-bone').style.width     = Math.min(100, selBone) + '%';
+      document.getElementById('b-musc-txt').textContent = Math.round(selMusc) + '%';
+      document.getElementById('b-musc').style.width     = Math.min(100, selMusc) + '%';
+      document.getElementById('b-surp-txt').textContent = Math.round(surp) + '% surp · ' + Math.round(pounce) + '% pounce';
+      document.getElementById('b-surp').style.width     = Math.min(100, Math.max(surp, pounce)) + '%';
+
+      if (isDoom) {
+        liveBossDist = (typeof bossDist === 'number') ? bossDist : 15.0;
+        liveTetherOn = tetherOn ? 1 : 0;
+        if (liveTetherOn && !prevTetherOn) sfxHarpoonLatch();
+        else if (!liveTetherOn && prevTetherOn && (wandCd || 0) > 0.35) sfxPlasmaSever();
+        if (selGen > prevTier) sfxPlasmaSever();
+        if (prevAdaptCode >= 0 && adaptCode !== prevAdaptCode) sfxBoneMorph();
+        if ((hurtFlash || 0) > prevHurt + 0.35 && audioCtx && sfxOn) sfxThump(audioCtx, audioCtx.currentTime, 98, 28, 0.19, 0.28);
+        if (flankerAlive && !prevFlanker) {
+          showToast('🦎 TIER 3+ PINCER SPLIT: Lateral Raptor Flanker is cutting off your opposite flank!');
+        }
+        prevTetherOn  = liveTetherOn;
+        prevAdaptCode = adaptCode;
+        prevTier      = selGen;
+        prevFlanker   = flankerAlive ? 1 : 0;
+        prevHurt      = hurtFlash || 0;
+
+        const scPct = Math.min(100, Math.max(0, scentConf || 0));
+        const lrnCnt = tdLearns || 0;
+        const isColNow = (headHeightM || 0) >= 5.0 || scaleMul >= 2.0;
+        document.getElementById('btn-mode-col').classList.toggle('active', isColNow);
+        document.getElementById('btn-mode-doom').classList.toggle('active', !isColNow);
+        const killsTag = (colossusKills > 0) ? (' · 🏆 ' + colossusKills + ' Slain') : '';
+        document.getElementById('dm-title').textContent =
+          (isColNow ? '🏔️ COLOSSUS · T' : '☠️ AMALGAM · T') + selGen + ' · ' + (headHeightM || 2.1).toFixed(1) + 'm' + killsTag + (lrnCnt > 0 ? (' · 🧠 ' + lrnCnt) : '');
+        document.getElementById('dm-boss-lbl').textContent = isColNow ? '🧠 Exposed Cranial Brain-Core (Climb Skull to Smash!)' : '🧠 Amalgam Core Integrity';
+        document.getElementById('dm-boss-txt').textContent = Math.round(bHp) + '%' + killsTag;
+        document.getElementById('dm-boss-hp').style.width  = bHp + '%';
+        document.getElementById('dm-boss-hp').style.background = (bHp < 38) ? '#f43f5e' : 'linear-gradient(90deg,#f59e0b,#22d3ee)';
+        document.getElementById('dm-alch-lbl').textContent = isClimbing ? '🧗 CLIMBING COLOSSUS!' : '⚗️ Alchemist HP';
+        if (flankerAlive) {
+          document.getElementById('dm-shards').textContent = '🦎 1 RAPTOR FLANKER' + (pureShards > 0 ? (' + ' + pureShards + ' Shard' + (pureShards > 1 ? 's' : '')) : ' HUNTING!');
+        } else {
+          document.getElementById('dm-shards').textContent = (pureShards > 0) ? ('🩸 ' + pureShards + ' Severed Shard' + (pureShards > 1 ? 's' : '') + ' Hunting!') : '0 Shards Loose';
+        }
+        const adEl = document.getElementById('dm-adapt');
+        adEl.classList.toggle('snared', !!tetherOn);
+        adEl.textContent = tetherOn
+          ? '🪝 FLESH-HARPOON SNARED! REELING YOU IN — PRESS [RMB / E] TO SEVER TENDRIL!'
+          : (ADAPT_LABELS[adaptCode || 0] || ADAPT_LABELS[0]);
+        const hp = Math.max(0, Math.min(100, playerHp || 100));
+        document.getElementById('dm-hp-txt').textContent = Math.round(hp) + '%';
+        document.getElementById('dm-hp').style.width     = hp + '%';
+        document.getElementById('dm-hp').style.background = (hp < 35) ? '#f43f5e' : '#22d3ee';
+        const wPct = Math.max(0, Math.min(100, (1.0 - (wandCd || 0) / 0.85) * 100));
+        document.getElementById('dm-wand-txt').textContent = (wandCd > 0.02) ? (wandCd.toFixed(1) + 's') : 'READY';
+        document.getElementById('dm-wand').style.width     = wPct + '%';
+        document.getElementById('hurt-vignette').style.opacity = Math.min(0.92, hurtFlash || 0).toFixed(2);
+      }
+
+      document.querySelectorAll('[data-limb]').forEach(btn => {
+        const l = parseInt(btn.dataset.limb, 10);
+        const has = (mask & (1 << l)) !== 0;
+        btn.classList.toggle('cut', !has);
+      });
+    };
+
+    const stamp = Date.now();
+    var Module = {
+      canvas: canvas,
+      locateFile: function(p) { return p + '?v=' + stamp; },
+      onRuntimeInitialized: function() {
+        syncViewport();
+      }
+    };
+    const sc = document.createElement('script');
+    sc.async = true;
+    sc.src = 'index.js?v=' + stamp;
+    document.body.appendChild(sc);
+  </script>
+</body>
+</html>

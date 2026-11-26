@@ -26,6 +26,13 @@ title: Home
 
 <div class="card-grid">
   <div class="project-card highlight">
+    <h3><a href="slinks/">SLINKS</a></h3>
+    <p class="card-tech">Carp · WebGPU · WebAssembly</p>
+    <p>Real-time 3D GPU artificial life arena and Shadow-of-the-Colossus boss raid compiled from Carp Lisp. 96-node XPBD skeletons, Wolff/Davis bone &amp; muscle growth, 512-rollout MPPI foresight, Spinal MLPs, and 55m Leviathan worms.</p>
+    <a href="slinks/" class="card-link">Run Demo →</a>
+  </div>
+
+  <div class="project-card highlight">
     <h3><a href="carp-voxel-engine/">Voxel Alchemy Engine</a></h3>
     <p class="card-tech">Carp · WebGPU · WebAssembly</p>
     <p>Real-time 3D GPU voxel sandbox and raymarcher compiled from Carp Lisp. Cellular fluids, colored GI, spectral terrain, modular spell wands, and black hole lensing.</p>
